@@ -22,33 +22,29 @@ export default function ProgressSection() {
   const goalType = profile?.goal_type ?? "publicador";
   const customHours = profile?.custom_goal_hours ?? null;
 
-  const isRegular = goalType === "precursor_regular";
-  const isPublicador = goalType === "publicador";
+  const monthlyGoal = getMonthlyGoalHours(goalType, customHours);
+  const annualGoal = getAnnualGoalHours(goalType, customHours);
 
   const now = new Date();
   const monthName = getMonthName(now.getMonth());
   const year = now.getFullYear();
 
-  if (isRegular) {
-    const annualGoal = getAnnualGoalHours(goalType, customHours);
-    return (
+  return (
+    <div className="flex flex-col gap-3">
+      <ProgressCard
+        title={monthName}
+        current={monthly?.totalHours ?? 0}
+        goal={monthlyGoal}
+        subtitle={`Predicación ${monthly?.predicacionHours ?? 0}h · Otros ${monthly?.otrosHours ?? 0}h`}
+        noGoal={goalType === "publicador"}
+      />
       <ProgressCard
         title={`Año ${year}`}
         current={annual?.totalHours ?? 0}
         goal={annualGoal}
-        subtitle={`Predicación ${annual?.predicacionHours ?? 0}h · ${annual?.cursosBiblicos ?? 0} cursos`}
+        subtitle={`${annual?.cursosBiblicos ?? 0} cursos bíblicos`}
+        noGoal={goalType !== "precursor_regular"}
       />
-    );
-  }
-
-  const monthlyGoal = getMonthlyGoalHours(goalType, customHours);
-  return (
-    <ProgressCard
-      title={monthName}
-      current={monthly?.totalHours ?? 0}
-      goal={monthlyGoal}
-      subtitle={`Predicación ${monthly?.predicacionHours ?? 0}h · Otros ${monthly?.otrosHours ?? 0}h`}
-      noGoal={isPublicador}
-    />
+    </div>
   );
 }
