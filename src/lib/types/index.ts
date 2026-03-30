@@ -1,9 +1,15 @@
 export type GoalType = "publicador" | "precursor_auxiliar" | "precursor_regular" | "custom";
 
-export const GOAL_PRESETS: Record<Exclude<GoalType, "custom">, { monthlyHours: number; label: string }> = {
-  publicador: { monthlyHours: 1, label: "Publicador" },
+export interface GoalPreset {
+  monthlyHours: number;
+  annualHours?: number;
+  label: string;
+}
+
+export const GOAL_PRESETS: Record<Exclude<GoalType, "custom">, GoalPreset> = {
+  publicador: { monthlyHours: 0, label: "Publicador" },
   precursor_auxiliar: { monthlyHours: 30, label: "Precursor Auxiliar" },
-  precursor_regular: { monthlyHours: 50, label: "Precursor Regular" },
+  precursor_regular: { monthlyHours: 50, annualHours: 600, label: "Precursor Regular" },
 };
 
 export interface Profile {

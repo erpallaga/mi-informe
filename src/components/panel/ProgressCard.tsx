@@ -3,6 +3,7 @@ interface ProgressCardProps {
   current: number;
   goal: number;
   subtitle?: string;
+  noGoal?: boolean;
 }
 
 export default function ProgressCard({
@@ -10,9 +11,10 @@ export default function ProgressCard({
   current,
   goal,
   subtitle,
+  noGoal = false,
 }: ProgressCardProps) {
   const pct = goal > 0 ? Math.min(100, (current / goal) * 100) : 0;
-  const done = goal > 0 && current >= goal;
+  const done = !noGoal && goal > 0 && current >= goal;
 
   return (
     <div className="bg-surface-container-low p-5 flex flex-col gap-4">
@@ -36,18 +38,24 @@ export default function ProgressCard({
         <span className="text-3xl font-black tabular-nums text-primary leading-none">
           {current % 1 === 0 ? current : current.toFixed(1)}
         </span>
-        <span className="text-sm text-on-surface-variant mb-0.5">
-          / {goal} hrs
-        </span>
+        {!noGoal && (
+          <span className="text-sm text-on-surface-variant mb-0.5">
+            / {goal} hrs
+          </span>
+        )}
+        {noGoal && (
+          <span className="text-sm text-on-surface-variant mb-0.5">hrs</span>
+        )}
       </div>
 
-      {/* Progress bar */}
-      <div className="h-1 w-full bg-surface-container-high">
-        <div
-          className="h-1 bg-primary transition-all duration-500 ease-out"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
+      {!noGoal && (
+        <div className="h-1 w-full bg-surface-container-high">
+          <div
+            className="h-1 bg-primary transition-all duration-500 ease-out"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      )}
     </div>
   );
 }

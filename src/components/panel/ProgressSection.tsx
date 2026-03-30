@@ -3,8 +3,7 @@
 import ProgressCard from "./ProgressCard";
 import { useProgress } from "@/lib/hooks/use-progress";
 import { useProfile } from "@/lib/hooks/use-profile";
-import { getMonthlyGoalHours } from "@/lib/utils/calculations";
-import { GOAL_PRESETS } from "@/lib/types";
+import { getMonthlyGoalHours, getAnnualGoalHours } from "@/lib/utils/calculations";
 import { getMonthName } from "@/lib/utils/dates";
 
 export default function ProgressSection() {
@@ -21,12 +20,11 @@ export default function ProgressSection() {
   }
 
   const goalType = profile?.goal_type ?? "publicador";
-  const monthlyGoal = getMonthlyGoalHours(
-    goalType,
-    profile?.custom_goal_hours ?? null,
-    GOAL_PRESETS
-  );
-  const annualGoal = monthlyGoal * 12;
+  const customHours = profile?.custom_goal_hours ?? null;
+
+  const monthlyGoal = getMonthlyGoalHours(goalType, customHours);
+  const annualGoal = getAnnualGoalHours(goalType, customHours);
+  const isPublicador = goalType === "publicador";
 
   const now = new Date();
   const monthName = getMonthName(now.getMonth());
@@ -39,12 +37,14 @@ export default function ProgressSection() {
         current={monthly?.totalHours ?? 0}
         goal={monthlyGoal}
         subtitle={`Predicación ${monthly?.predicacionHours ?? 0}h · Otros ${monthly?.otrosHours ?? 0}h`}
+        noGoal={isPublicador}
       />
       <ProgressCard
         title={`Año ${year}`}
         current={annual?.totalHours ?? 0}
         goal={annualGoal}
         subtitle={`${annual?.cursosBiblicos ?? 0} cursos bíblicos`}
+        noGoal={isPublicador}
       />
     </div>
   );

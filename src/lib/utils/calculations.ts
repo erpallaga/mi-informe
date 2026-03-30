@@ -1,4 +1,5 @@
-import type { ActivityEntry, GoalType, GOAL_PRESETS } from "@/lib/types";
+import type { ActivityEntry, GoalType } from "@/lib/types";
+import { GOAL_PRESETS } from "@/lib/types";
 
 export function sumOtrosHours(otros: Record<string, number>): number {
   return Object.values(otros).reduce((sum, h) => sum + h, 0);
@@ -28,16 +29,39 @@ export function aggregateEntries(entries: ActivityEntry[]) {
   };
 }
 
+/**
+ * Returns the monthly goal in hours.
+ * - publicador: 0 (no goal)
+ * - precursor_auxiliar: custom_goal_hours (15 or 30), default 30
+ * - precursor_regular: 50
+ * - custom: custom_goal_hours
+ */
 export function getMonthlyGoalHours(
   goalType: GoalType,
-  customHours: number | null,
-  presets: typeof GOAL_PRESETS
+  customHours: number | null
 ): number {
-  if (goalType === "custom" && customHours !== null) {
-    return customHours;
+  if (goalType === "publicador") return 0;
+  if (goalType === "precursor_regular") return GOAL_PRESETS.precursor_regular.monthlyHours;
+  if (goalType === "precursor_auxiliar") {
+    return customHours !== null ? customHours : GOAL_PRESETS.precursor_auxiliar.monthlyHours;
   }
-  if (goalType !== "custom") {
-    return presets[goalType].monthlyHours;
-  }
-  return 0;
+  // custom
+  return customHours !== null ? customHours : 0;
+}
+
+/**
+ * Returns the annual goal in hours.
+ * - publicador: 0 (no goal)
+ * - precursor_regular: 600 (fixed by org policy)
+ * - precursor_auxiliar: monthly * 12
+ * - custom: monthly * 12
+ */
+export function getAnnualGoalHours(
+  goalType: GoalType,
+  customHours: number | null
+): number {
+  if (goalType === "publicador") return 0;
+  if (goalType === "precursor_regular") return GOAL_PRESETS.precursor_regular.annualHours ?? 600;
+  const monthly = getMonthlyGoalHours(goalType, customHours);
+  return monthly * 12;
 }
