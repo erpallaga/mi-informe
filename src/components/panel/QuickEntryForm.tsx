@@ -11,12 +11,18 @@ function todayISO(): string {
   return d.toISOString().split("T")[0];
 }
 
-export default function QuickEntryForm({ onSuccess }: { onSuccess?: () => void }) {
+export default function QuickEntryForm({
+  onSuccess,
+  defaultOtrosOpen = false,
+}: {
+  onSuccess?: () => void;
+  defaultOtrosOpen?: boolean;
+}) {
   const [date, setDate] = useState(todayISO());
   const [predicacionHours, setPredicacionHours] = useState(0);
   const [cursosBiblicos, setCursosBiblicos] = useState(0);
   const [otrosHours, setOtrosHours] = useState<Record<string, number>>({});
-  const [otrosOpen, setOtrosOpen] = useState(false);
+  const [otrosOpen, setOtrosOpen] = useState(defaultOtrosOpen);
   const [success, setSuccess] = useState(false);
 
   const { categories, loading: loadingCats } = useCategories();
