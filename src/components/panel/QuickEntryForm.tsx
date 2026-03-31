@@ -23,7 +23,6 @@ export default function QuickEntryForm({
   const [cursosBiblicos, setCursosBiblicos] = useState(0);
   const [otrosHours, setOtrosHours] = useState<Record<string, number>>({});
   const [otrosOpen, setOtrosOpen] = useState(defaultOtrosOpen);
-  const [success, setSuccess] = useState(false);
 
   const { categories, loading: loadingCats } = useCategories();
   const { insertEntry, loading: submitting, error } = useActivity();
@@ -52,8 +51,6 @@ export default function QuickEntryForm({
       setCursosBiblicos(0);
       setOtrosHours({});
       setDate(todayISO());
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
       onSuccess?.();
     }
   }
@@ -131,13 +128,6 @@ export default function QuickEntryForm({
       {/* Error */}
       {error && (
         <p className="text-xs text-error">{error}</p>
-      )}
-
-      {/* Success */}
-      {success && (
-        <p className="text-xs font-medium text-on-surface bg-surface-container-low px-4 py-3">
-          Actividad registrada correctamente.
-        </p>
       )}
 
       {/* Submit */}

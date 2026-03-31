@@ -11,7 +11,7 @@ interface NewEntrySheetProps {
 export default function NewEntrySheet({ open, onClose, onSuccess }: NewEntrySheetProps) {
   function handleSuccess() {
     onSuccess();
-    setTimeout(() => onClose(), 1500);
+    onClose();
   }
 
   return (

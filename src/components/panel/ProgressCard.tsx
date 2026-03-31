@@ -42,8 +42,8 @@ export default function ProgressCard({
     if (prev !== null && prev < goal && current >= goal && !noGoal && goal > 0) {
       setShowOverlay(true);
       setOverlayFading(false);
-      const fadeTimer = setTimeout(() => setOverlayFading(true), 2000);
-      const hideTimer = setTimeout(() => setShowOverlay(false), 2600);
+      const fadeTimer = setTimeout(() => setOverlayFading(true), 3000);
+      const hideTimer = setTimeout(() => setShowOverlay(false), 3600);
       return () => {
         clearTimeout(fadeTimer);
         clearTimeout(hideTimer);
