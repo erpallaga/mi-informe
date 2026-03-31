@@ -60,7 +60,7 @@ CREATE TABLE public.activity_entries (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   entry_date DATE NOT NULL,
-  predicacion_hours NUMERIC(4,1) NOT NULL DEFAULT 0,
+  predicacion_hours NUMERIC(5,2) NOT NULL DEFAULT 0,
   cursos_biblicos INTEGER NOT NULL DEFAULT 0,
   otros_hours JSONB NOT NULL DEFAULT '{}'::jsonb,
   notes TEXT,
