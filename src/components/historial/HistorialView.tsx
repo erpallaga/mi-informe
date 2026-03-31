@@ -1,6 +1,7 @@
 "use client";
 
 import { useHistory } from "@/lib/hooks/use-history";
+import { useCategories } from "@/lib/hooks/use-categories";
 import { getServiceYear } from "@/lib/utils/dates";
 import { fmtHours } from "@/lib/utils/calculations";
 import MonthlyBarChart from "./MonthlyBarChart";
@@ -8,9 +9,10 @@ import MonthlyCard from "./MonthlyCard";
 
 export default function HistorialView() {
   const serviceYear = getServiceYear();
-  const { months, loading } = useHistory(serviceYear.startYear);
+  const { months, loading: loadingMonths } = useHistory(serviceYear.startYear);
+  const { categories, loading: loadingCats } = useCategories();
 
-  if (loading) {
+  if (loadingMonths || loadingCats) {
     return (
       <div className="flex flex-col gap-3">
         <div className="bg-surface-container-low h-40 animate-pulse" />
@@ -24,7 +26,6 @@ export default function HistorialView() {
   const monthsWithData = months.filter((m) => m.entriesCount > 0);
   const avg = monthsWithData.length > 0 ? totalHours / monthsWithData.length : 0;
 
-  // Show only months up to and including the current one in the service year
   const currentIndex = months.findIndex((m) => m.isCurrentMonth);
   const visibleMonths = currentIndex >= 0 ? months.slice(0, currentIndex + 1) : months;
 
@@ -46,13 +47,11 @@ export default function HistorialView() {
         </div>
       </div>
 
-      {/* Chart — all 12 months of service year */}
       <MonthlyBarChart months={months} />
 
-      {/* Monthly cards — most recent first */}
       <div className="flex flex-col gap-3">
         {[...visibleMonths].reverse().map((m) => (
-          <MonthlyCard key={`${m.calYear}-${m.month}`} data={m} />
+          <MonthlyCard key={`${m.calYear}-${m.month}`} data={m} categories={categories} />
         ))}
       </div>
     </div>

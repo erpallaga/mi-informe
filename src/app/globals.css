@@ -16,7 +16,22 @@
   }
 }
 
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @layer utilities {
+  .animate-page-in {
+    animation: page-in 200ms ease-out both;
+  }
+
   .glass {
     background-color: rgba(255, 255, 255, 0.80);
     backdrop-filter: blur(20px);

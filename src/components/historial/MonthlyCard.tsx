@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import type { MonthData } from "@/lib/hooks/use-history";
-import { useCategories } from "@/lib/hooks/use-categories";
+import type { Category } from "@/lib/types";
 import { getMonthName } from "@/lib/utils/dates";
 import { fmtHours } from "@/lib/utils/calculations";
 
 interface MonthlyCardProps {
   data: MonthData;
+  categories: Category[];
 }
 
-export default function MonthlyCard({ data }: MonthlyCardProps) {
+export default function MonthlyCard({ data, categories }: MonthlyCardProps) {
   const [otrosOpen, setOtrosOpen] = useState(false);
-  const { categories } = useCategories();
 
   if (data.entriesCount === 0) return null;
 
