@@ -13,16 +13,21 @@ export function aggregateEntries(entries: ActivityEntry[]) {
   let predicacionHours = 0;
   let otrosHours = 0;
   let cursosBiblicos = 0;
+  const otrosByCategory: Record<string, number> = {};
 
   for (const entry of entries) {
     predicacionHours += entry.predicacion_hours;
     otrosHours += sumOtrosHours(entry.otros_hours);
     cursosBiblicos += entry.cursos_biblicos;
+    for (const [id, h] of Object.entries(entry.otros_hours)) {
+      otrosByCategory[id] = (otrosByCategory[id] ?? 0) + h;
+    }
   }
 
   return {
     predicacionHours,
     otrosHours,
+    otrosByCategory,
     totalHours: predicacionHours + otrosHours,
     cursosBiblicos,
     entriesCount: entries.length,

@@ -3,14 +3,20 @@
 import ProgressCard from "./ProgressCard";
 import { useProgress } from "@/lib/hooks/use-progress";
 import { useProfile } from "@/lib/hooks/use-profile";
+import { useCategories } from "@/lib/hooks/use-categories";
 import { getMonthlyGoalHours, getAnnualGoalHours } from "@/lib/utils/calculations";
 import { getMonthName } from "@/lib/utils/dates";
+
+function fmt(h: number) {
+  return h % 1 === 0 ? `${h}h` : `${h.toFixed(1)}h`;
+}
 
 export default function ProgressSection() {
   const { monthly, annual, loading: loadingProgress } = useProgress();
   const { profile, loading: loadingProfile } = useProfile();
+  const { categories, loading: loadingCats } = useCategories();
 
-  if (loadingProgress || loadingProfile) {
+  if (loadingProgress || loadingProfile || loadingCats) {
     return (
       <div className="flex flex-col gap-3">
         <div className="bg-surface-container-low h-28 animate-pulse" />
@@ -28,6 +34,33 @@ export default function ProgressSection() {
   const now = new Date();
   const monthName = getMonthName(now.getMonth());
   const year = now.getFullYear();
+  const monthsElapsed = now.getMonth() + 1;
+
+  // Build category name map
+  const catNames: Record<string, string> = {};
+  for (const cat of categories) catNames[cat.id] = cat.name;
+
+  // Monthly details
+  const monthlyDetails = [
+    { label: "Predicación", value: fmt(monthly?.predicacionHours ?? 0) },
+    ...categories
+      .filter((cat) => (monthly?.otrosByCategory?.[cat.id] ?? 0) > 0)
+      .map((cat) => ({ label: cat.name, value: fmt(monthly!.otrosByCategory[cat.id]) })),
+    { label: "Cursos bíblicos", value: `${monthly?.cursosBiblicos ?? 0}` },
+  ];
+
+  // Annual details
+  const avgCursos = annual?.cursosBiblicos
+    ? (annual.cursosBiblicos / monthsElapsed).toFixed(1)
+    : "0";
+
+  const annualDetails = [
+    { label: "Predicación", value: fmt(annual?.predicacionHours ?? 0) },
+    ...categories
+      .filter((cat) => (annual?.otrosByCategory?.[cat.id] ?? 0) > 0)
+      .map((cat) => ({ label: cat.name, value: fmt(annual!.otrosByCategory[cat.id]) })),
+    { label: "Promedio cursos / mes", value: avgCursos },
+  ];
 
   return (
     <div className="flex flex-col gap-3">
@@ -35,14 +68,14 @@ export default function ProgressSection() {
         title={monthName}
         current={monthly?.totalHours ?? 0}
         goal={monthlyGoal}
-        subtitle={`Predicación ${monthly?.predicacionHours ?? 0}h · Otros ${monthly?.otrosHours ?? 0}h`}
+        details={monthlyDetails}
         noGoal={goalType === "publicador"}
       />
       <ProgressCard
         title={`Año ${year}`}
         current={annual?.totalHours ?? 0}
         goal={annualGoal}
-        subtitle={`${annual?.cursosBiblicos ?? 0} cursos bíblicos`}
+        details={annualDetails}
         noGoal={goalType !== "precursor_regular"}
       />
     </div>

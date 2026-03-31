@@ -1,8 +1,13 @@
+interface DetailRow {
+  label: string;
+  value: string;
+}
+
 interface ProgressCardProps {
   title: string;
   current: number;
   goal: number;
-  subtitle?: string;
+  details?: DetailRow[];
   noGoal?: boolean;
 }
 
@@ -10,7 +15,7 @@ export default function ProgressCard({
   title,
   current,
   goal,
-  subtitle,
+  details,
   noGoal = false,
 }: ProgressCardProps) {
   const pct = goal > 0 ? Math.min(100, (current / goal) * 100) : 0;
@@ -19,14 +24,9 @@ export default function ProgressCard({
   return (
     <div className="bg-surface-container-low p-5 flex flex-col gap-4">
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-widest text-on-surface-variant">
-            {title}
-          </p>
-          {subtitle && (
-            <p className="mt-0.5 text-xs text-on-surface-variant">{subtitle}</p>
-          )}
-        </div>
+        <p className="text-xs font-medium uppercase tracking-widest text-on-surface-variant">
+          {title}
+        </p>
         {done && (
           <span className="text-xs font-semibold uppercase tracking-widest text-primary">
             Cumplido
@@ -47,6 +47,17 @@ export default function ProgressCard({
           <span className="text-sm text-on-surface-variant mb-0.5">hrs</span>
         )}
       </div>
+
+      {details && details.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          {details.map((row) => (
+            <div key={row.label} className="flex items-center justify-between">
+              <span className="text-xs text-on-surface-variant">{row.label}</span>
+              <span className="text-xs font-medium text-on-surface tabular-nums">{row.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {!noGoal && (
         <div className="h-1 w-full bg-surface-container-high">

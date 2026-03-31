@@ -8,6 +8,7 @@ import type { ActivityEntry } from "@/lib/types";
 interface ProgressData {
   predicacionHours: number;
   otrosHours: number;
+  otrosByCategory: Record<string, number>;
   totalHours: number;
   cursosBiblicos: number;
   entriesCount: number;
