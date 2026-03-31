@@ -13,13 +13,9 @@ import type { MonthData } from "@/lib/hooks/use-history";
 
 interface MonthlyBarChartProps {
   months: MonthData[];
-  currentMonth: number;
 }
 
-export default function MonthlyBarChart({
-  months,
-  currentMonth,
-}: MonthlyBarChartProps) {
+export default function MonthlyBarChart({ months }: MonthlyBarChartProps) {
   return (
     <div className="h-40 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -59,16 +55,16 @@ export default function MonthlyBarChart({
           <Bar dataKey="predicacionHours" stackId="a" fill="#1a1c1d">
             {months.map((entry) => (
               <Cell
-                key={entry.month}
-                fill={entry.month === currentMonth ? "#000000" : "#c6c6c6"}
+                key={`${entry.calYear}-${entry.month}`}
+                fill={entry.isCurrentMonth ? "#000000" : "#c6c6c6"}
               />
             ))}
           </Bar>
           <Bar dataKey="otrosHours" stackId="a" fill="#777777">
             {months.map((entry) => (
               <Cell
-                key={entry.month}
-                fill={entry.month === currentMonth ? "#474747" : "#e2e2e4"}
+                key={`${entry.calYear}-${entry.month}`}
+                fill={entry.isCurrentMonth ? "#474747" : "#e2e2e4"}
               />
             ))}
           </Bar>

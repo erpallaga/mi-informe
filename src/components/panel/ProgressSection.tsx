@@ -5,14 +5,14 @@ import { useProgress } from "@/lib/hooks/use-progress";
 import { useProfile } from "@/lib/hooks/use-profile";
 import { useCategories } from "@/lib/hooks/use-categories";
 import { getMonthlyGoalHours, getAnnualGoalHours } from "@/lib/utils/calculations";
-import { getMonthName } from "@/lib/utils/dates";
+import { getMonthName, getServiceYear } from "@/lib/utils/dates";
 
 function fmt(h: number) {
   return h % 1 === 0 ? `${h}h` : `${h.toFixed(1)}h`;
 }
 
 export default function ProgressSection() {
-  const { monthly, annual, loading: loadingProgress } = useProgress();
+  const { monthly, annual, annualCappedHours, loading: loadingProgress } = useProgress();
   const { profile, loading: loadingProfile } = useProfile();
   const { categories, loading: loadingCats } = useCategories();
 
@@ -33,8 +33,10 @@ export default function ProgressSection() {
 
   const now = new Date();
   const monthName = getMonthName(now.getMonth());
-  const year = now.getFullYear();
-  const monthsElapsed = now.getMonth() + 1;
+  const serviceYear = getServiceYear(now);
+  // Months elapsed since start of service year (Sept = month 1)
+  const calMonth = now.getMonth();
+  const monthsElapsed = calMonth >= 8 ? calMonth - 7 : calMonth + 5;
 
   // Build category name map
   const catNames: Record<string, string> = {};
@@ -72,8 +74,8 @@ export default function ProgressSection() {
         noGoal={goalType === "publicador"}
       />
       <ProgressCard
-        title={`Año ${year}`}
-        current={annual?.totalHours ?? 0}
+        title={serviceYear.label}
+        current={goalType === "precursor_regular" ? annualCappedHours : (annual?.totalHours ?? 0)}
         goal={annualGoal}
         details={annualDetails}
         noGoal={goalType !== "precursor_regular"}

@@ -1,6 +1,37 @@
 import type { ActivityEntry, GoalType } from "@/lib/types";
 import { GOAL_PRESETS } from "@/lib/types";
 
+/**
+ * Monthly contribution toward the Precursor Regular annual goal (600h).
+ * - No Otros: full total counts.
+ * - With Otros: capped at 55h, but never below predicacionHours alone (case C).
+ */
+export function monthlyAnnualContribution(
+  predicacionHours: number,
+  otrosHours: number
+): number {
+  if (otrosHours === 0) return predicacionHours;
+  return Math.max(predicacionHours, Math.min(predicacionHours + otrosHours, 55));
+}
+
+/**
+ * Sums the capped monthly contributions for Precursor Regular from a list of entries.
+ * Groups entries by calendar month+year, applies the cap per group, then sums.
+ */
+export function aggregateAnnualCapped(entries: ActivityEntry[]): number {
+  const byMonth: Record<string, { pred: number; otros: number }> = {};
+  for (const entry of entries) {
+    const key = entry.entry_date.substring(0, 7); // "YYYY-MM"
+    if (!byMonth[key]) byMonth[key] = { pred: 0, otros: 0 };
+    byMonth[key].pred += entry.predicacion_hours;
+    byMonth[key].otros += sumOtrosHours(entry.otros_hours);
+  }
+  return Object.values(byMonth).reduce(
+    (sum, { pred, otros }) => sum + monthlyAnnualContribution(pred, otros),
+    0
+  );
+}
+
 export function sumOtrosHours(otros: Record<string, number>): number {
   return Object.values(otros).reduce((sum, h) => sum + h, 0);
 }
