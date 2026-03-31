@@ -77,7 +77,7 @@ export default function LoginPage() {
                   key={m}
                   type="button"
                   onClick={() => { setMode(m); setError(null); }}
-                  className={`flex-1 py-2.5 text-xs font-semibold uppercase tracking-widest transition-colors ${
+                  className={`flex-1 py-2.5 text-xs font-semibold uppercase tracking-widest transition-colors ease-out ${
                     mode === m
                       ? "bg-primary text-on-primary"
                       : "text-on-surface-variant"
@@ -100,7 +100,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tu@correo.com"
-                  className="bg-surface-container-low px-4 py-3 text-sm text-on-surface placeholder:text-outline-variant outline-none focus:bg-white transition-colors"
+                  className="bg-surface-container-low px-4 py-3 text-sm text-on-surface placeholder:text-outline-variant outline-none focus:bg-white transition-colors ease-out"
                 />
               </div>
 
@@ -115,7 +115,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="bg-surface-container-low px-4 py-3 text-sm text-on-surface placeholder:text-outline-variant outline-none focus:bg-white transition-colors"
+                  className="bg-surface-container-low px-4 py-3 text-sm text-on-surface placeholder:text-outline-variant outline-none focus:bg-white transition-colors ease-out"
                 />
               </div>
 
@@ -124,7 +124,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading || !email || !password}
-                className="mt-2 bg-primary px-4 py-3 text-sm font-medium text-on-primary disabled:opacity-40 transition-opacity"
+                className="mt-2 bg-primary px-4 py-3 text-sm font-medium text-on-primary disabled:opacity-40 transition-opacity ease-out"
               >
                 {loading
                   ? "..."

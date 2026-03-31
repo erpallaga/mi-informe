@@ -19,7 +19,7 @@ export default function NewEntrySheet({ open, onClose, onSuccess }: NewEntryShee
       {/* Overlay */}
       <div
         onClick={onClose}
-        className={`fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 ${
+        className={`fixed inset-0 z-40 bg-on-surface/30 transition-opacity duration-300 ease-out ${
           open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
       />

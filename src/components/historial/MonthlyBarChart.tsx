@@ -48,7 +48,7 @@ export default function MonthlyBarChart({
               borderRadius: 0,
               fontSize: 12,
               fontFamily: "Inter",
-              boxShadow: "0 4px 40px rgba(26,28,29,0.08)",
+              boxShadow: "0 4px 40px rgba(26,28,29,0.04)",
             }}
             formatter={(value, name) => [
               `${value}h`,

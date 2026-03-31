@@ -24,7 +24,7 @@ export default function BottomNavBar() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex h-9 items-center px-5 text-xs font-semibold uppercase tracking-widest transition-colors ${
+              className={`flex h-9 items-center px-5 text-xs font-semibold uppercase tracking-widest transition-colors ease-out ${
                 isActive
                   ? "bg-primary text-on-primary"
                   : "text-on-surface-variant"

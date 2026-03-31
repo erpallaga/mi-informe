@@ -31,7 +31,7 @@ export default function HoursSpinner({
         type="button"
         onClick={decrement}
         disabled={value <= min}
-        className="flex h-9 w-9 items-center justify-center bg-surface-container text-on-surface disabled:opacity-30 text-lg font-medium transition-opacity"
+        className="flex h-9 w-9 items-center justify-center bg-surface-container text-on-surface disabled:opacity-30 text-lg font-medium transition-opacity ease-out"
         aria-label="Reducir"
       >
         −
@@ -43,7 +43,7 @@ export default function HoursSpinner({
         type="button"
         onClick={increment}
         disabled={value >= max}
-        className="flex h-9 w-9 items-center justify-center bg-surface-container text-on-surface disabled:opacity-30 text-lg font-medium transition-opacity"
+        className="flex h-9 w-9 items-center justify-center bg-surface-container text-on-surface disabled:opacity-30 text-lg font-medium transition-opacity ease-out"
         aria-label="Aumentar"
       >
         +

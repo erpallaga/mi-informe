@@ -69,7 +69,7 @@ export default function QuickEntryForm({
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="bg-surface-container-low px-4 py-3 text-sm text-on-surface outline-none focus:bg-white transition-colors"
+          className="bg-surface-container-low px-4 py-3 text-sm text-on-surface outline-none focus:bg-white transition-colors ease-out"
         />
       </div>
 
@@ -144,7 +144,7 @@ export default function QuickEntryForm({
       <button
         type="submit"
         disabled={submitting || (predicacionHours === 0 && cursosBiblicos === 0 && Object.values(otrosHours).every((v) => v === 0))}
-        className="mt-2 bg-primary py-4 text-sm font-semibold uppercase tracking-widest text-on-primary disabled:opacity-40 transition-opacity"
+        className="mt-2 bg-primary py-4 text-sm font-semibold uppercase tracking-widest text-on-primary disabled:opacity-40 transition-opacity ease-out"
       >
         {submitting ? "Registrando..." : "Registrar Actividad"}
       </button>

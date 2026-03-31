@@ -89,7 +89,7 @@ export default function GoalSelector() {
               key={opt.value}
               type="button"
               onClick={() => handleSelectMain(opt.value)}
-              className={`flex items-center justify-between px-4 py-3 text-left transition-colors ${
+              className={`flex items-center justify-between px-4 py-3 text-left transition-colors ease-out ${
                 isActive
                   ? "bg-primary text-on-primary"
                   : "bg-surface-container-low text-on-surface"
@@ -119,7 +119,7 @@ export default function GoalSelector() {
                 type="button"
                 disabled={saving}
                 onClick={() => handleSelectAuxiliar(opt.hours)}
-                className={`flex-1 py-3 text-sm font-semibold transition-colors disabled:opacity-40 ${
+                className={`flex-1 py-3 text-sm font-semibold transition-colors ease-out disabled:opacity-40 ${
                   isActive
                     ? "bg-primary text-on-primary"
                     : "bg-surface-container-low text-on-surface"
@@ -142,7 +142,7 @@ export default function GoalSelector() {
             value={currentCustom}
             onChange={(e) => setCustomHours(e.target.value)}
             placeholder="Horas por mes"
-            className="flex-1 bg-surface-container-low px-4 py-3 text-sm text-on-surface outline-none focus:bg-white transition-colors"
+            className="flex-1 bg-surface-container-low px-4 py-3 text-sm text-on-surface outline-none focus:bg-white transition-colors ease-out"
           />
           <button
             type="button"

@@ -16,7 +16,7 @@ export default function SignOutButton() {
     <button
       type="button"
       onClick={handleSignOut}
-      className="w-full py-4 text-sm font-semibold uppercase tracking-widest text-error bg-surface-container-low transition-opacity"
+      className="w-full py-4 text-sm font-semibold uppercase tracking-widest text-error bg-surface-container-low transition-opacity ease-out"
     >
       Cerrar sesión
     </button>
