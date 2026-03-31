@@ -8,17 +8,13 @@ import { fmtHours } from "@/lib/utils/calculations";
 
 interface MonthlyCardProps {
   data: MonthData;
-  prev: MonthData | null;
 }
 
-export default function MonthlyCard({ data, prev }: MonthlyCardProps) {
+export default function MonthlyCard({ data }: MonthlyCardProps) {
   const [otrosOpen, setOtrosOpen] = useState(false);
   const { categories } = useCategories();
 
   if (data.entriesCount === 0) return null;
-
-  const delta =
-    prev && prev.totalHours > 0 ? data.totalHours - prev.totalHours : null;
 
   const otrosCategories = categories.filter(
     (cat) => (data.otrosByCategory?.[cat.id] ?? 0) > 0
@@ -30,15 +26,6 @@ export default function MonthlyCard({ data, prev }: MonthlyCardProps) {
         <p className="text-xs font-medium uppercase tracking-widest text-on-surface-variant">
           {getMonthName(data.month)}
         </p>
-        {delta !== null && (
-          <span
-            className={`text-xs font-semibold ${
-              delta >= 0 ? "text-on-surface" : "text-secondary"
-            }`}
-          >
-            {delta >= 0 ? "↑" : "↓"} {fmtHours(Math.abs(delta))}
-          </span>
-        )}
       </div>
 
       <div className="flex items-end gap-1.5">

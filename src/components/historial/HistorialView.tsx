@@ -51,11 +51,9 @@ export default function HistorialView() {
 
       {/* Monthly cards — most recent first */}
       <div className="flex flex-col gap-3">
-        {[...visibleMonths].reverse().map((m, i) => {
-          const prevIndex = visibleMonths.length - 1 - i - 1;
-          const prev = prevIndex >= 0 ? visibleMonths[prevIndex] : null;
-          return <MonthlyCard key={`${m.calYear}-${m.month}`} data={m} prev={prev} />;
-        })}
+        {[...visibleMonths].reverse().map((m) => (
+          <MonthlyCard key={`${m.calYear}-${m.month}`} data={m} />
+        ))}
       </div>
     </div>
   );
