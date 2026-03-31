@@ -27,9 +27,10 @@ export default function MonthlyBarChart({ months }: MonthlyBarChartProps) {
         >
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 10, fill: "#777777", fontFamily: "Inter" }}
+            tick={{ fontSize: 9, fill: "#777777", fontFamily: "Inter" }}
             axisLine={false}
             tickLine={false}
+            interval={0}
           />
           <YAxis
             tick={{ fontSize: 10, fill: "#777777", fontFamily: "Inter" }}
