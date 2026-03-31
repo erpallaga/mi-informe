@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { aggregateEntries, aggregateAnnualCapped } from "@/lib/utils/calculations";
 import { getServiceYear } from "@/lib/utils/dates";
@@ -20,9 +20,14 @@ export function useProgress() {
   const [annual, setAnnual] = useState<ProgressData | null>(null);
   const [annualCappedHours, setAnnualCappedHours] = useState(0);
   const [loading, setLoading] = useState(true);
+  const hasDataRef = useRef(false);
 
   function fetchData() {
-    setLoading(true);
+    // Only show loading skeleton on the very first fetch.
+    // On subsequent refreshes keep cards mounted so the celebration
+    // animation in ProgressCard can detect the goal-crossing event.
+    if (!hasDataRef.current) setLoading(true);
+
     const supabase = createClient();
     const now = new Date();
     const year = now.getFullYear();
@@ -41,6 +46,7 @@ export function useProgress() {
       setMonthly(aggregateEntries((monthRes.data ?? []) as ActivityEntry[]));
       setAnnual(aggregateEntries(annualEntries));
       setAnnualCappedHours(aggregateAnnualCapped(annualEntries));
+      hasDataRef.current = true;
       setLoading(false);
     });
   }
