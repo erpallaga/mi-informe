@@ -1,5 +1,5 @@
 import TopAppBar from "@/components/layout/TopAppBar";
-import BottomNavBar from "@/components/layout/BottomNavBar";
+import AppNav from "@/components/layout/AppNav";
 
 export default function AppLayout({
   children,
@@ -12,7 +12,7 @@ export default function AppLayout({
       <main className="min-h-screen pt-14 pb-20 px-6">
         {children}
       </main>
-      <BottomNavBar />
+      <AppNav />
     </>
   );
 }

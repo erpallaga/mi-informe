@@ -44,6 +44,7 @@ export function useActivity() {
     }
 
     setLoading(false);
+    window.dispatchEvent(new CustomEvent("mi-informe:entry-created"));
     return true;
   }
 
