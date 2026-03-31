@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useRef } from "react";
+
 interface HoursSpinnerProps {
   value: number;
   onChange: (value: number) => void;
@@ -15,6 +17,9 @@ export default function HoursSpinner({
   min = 0,
   max = 24,
 }: HoursSpinnerProps) {
+  const [editing, setEditing] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
   function decrement() {
     const next = Math.max(min, Math.round((value - step) * 10) / 10);
     onChange(next);
@@ -23,6 +28,15 @@ export default function HoursSpinner({
   function increment() {
     const next = Math.min(max, Math.round((value + step) * 10) / 10);
     onChange(next);
+  }
+
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = parseFloat(e.target.value);
+    if (!isNaN(v)) onChange(Math.min(max, Math.max(min, Math.round(v * 100) / 100)));
+  }
+
+  function commitEdit() {
+    setEditing(false);
   }
 
   return (
@@ -36,9 +50,30 @@ export default function HoursSpinner({
       >
         −
       </button>
-      <span className="w-12 text-center text-base font-semibold tabular-nums text-on-surface">
-        {value % 1 === 0 ? `${value}` : value.toFixed(1)}
-      </span>
+
+      {editing ? (
+        <input
+          ref={inputRef}
+          type="number"
+          value={value}
+          min={min}
+          max={max}
+          step={0.25}
+          autoFocus
+          onChange={handleInputChange}
+          onBlur={commitEdit}
+          onKeyDown={(e) => e.key === "Enter" && commitEdit()}
+          className="w-12 text-center text-base font-semibold tabular-nums text-on-surface bg-surface-container-low outline-none py-1"
+        />
+      ) : (
+        <span
+          onClick={() => setEditing(true)}
+          className="w-12 text-center text-base font-semibold tabular-nums text-on-surface cursor-text select-none"
+        >
+          {value % 1 === 0 ? `${value}` : value.toFixed(2).replace(/\.?0+$/, "")}
+        </span>
+      )}
+
       <button
         type="button"
         onClick={increment}

@@ -42,27 +42,31 @@ export default function ProgressSection() {
   const catNames: Record<string, string> = {};
   for (const cat of categories) catNames[cat.id] = cat.name;
 
-  // Monthly details
+  // Monthly details (always visible)
   const monthlyDetails = [
     { label: "Predicación", value: fmt(monthly?.predicacionHours ?? 0) },
-    ...categories
-      .filter((cat) => (monthly?.otrosByCategory?.[cat.id] ?? 0) > 0)
-      .map((cat) => ({ label: cat.name, value: fmt(monthly!.otrosByCategory[cat.id]) })),
     { label: "Cursos bíblicos", value: `${monthly?.cursosBiblicos ?? 0}` },
   ];
 
-  // Annual details
+  // Monthly Otros (collapsible)
+  const monthlyOtros = categories
+    .filter((cat) => (monthly?.otrosByCategory?.[cat.id] ?? 0) > 0)
+    .map((cat) => ({ label: cat.name, value: fmt(monthly!.otrosByCategory[cat.id]) }));
+
+  // Annual details (always visible)
   const avgCursos = annual?.cursosBiblicos
     ? (annual.cursosBiblicos / monthsElapsed).toFixed(1)
     : "0";
 
   const annualDetails = [
     { label: "Predicación", value: fmt(annual?.predicacionHours ?? 0) },
-    ...categories
-      .filter((cat) => (annual?.otrosByCategory?.[cat.id] ?? 0) > 0)
-      .map((cat) => ({ label: cat.name, value: fmt(annual!.otrosByCategory[cat.id]) })),
     { label: "Promedio cursos / mes", value: avgCursos },
   ];
+
+  // Annual Otros (collapsible)
+  const annualOtros = categories
+    .filter((cat) => (annual?.otrosByCategory?.[cat.id] ?? 0) > 0)
+    .map((cat) => ({ label: cat.name, value: fmt(annual!.otrosByCategory[cat.id]) }));
 
   return (
     <div className="flex flex-col gap-3">
@@ -71,6 +75,7 @@ export default function ProgressSection() {
         current={monthly?.totalHours ?? 0}
         goal={monthlyGoal}
         details={monthlyDetails}
+        collapsibleDetails={monthlyOtros}
         noGoal={goalType === "publicador"}
       />
       <ProgressCard
@@ -78,6 +83,7 @@ export default function ProgressSection() {
         current={goalType === "precursor_regular" ? annualCappedHours : (annual?.totalHours ?? 0)}
         goal={annualGoal}
         details={annualDetails}
+        collapsibleDetails={annualOtros}
         noGoal={goalType !== "precursor_regular"}
       />
     </div>

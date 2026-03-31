@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 interface DetailRow {
   label: string;
   value: string;
@@ -8,6 +12,7 @@ interface ProgressCardProps {
   current: number;
   goal: number;
   details?: DetailRow[];
+  collapsibleDetails?: DetailRow[];
   noGoal?: boolean;
 }
 
@@ -16,10 +21,13 @@ export default function ProgressCard({
   current,
   goal,
   details,
+  collapsibleDetails,
   noGoal = false,
 }: ProgressCardProps) {
+  const [otrosOpen, setOtrosOpen] = useState(false);
   const pct = goal > 0 ? Math.min(100, (current / goal) * 100) : 0;
   const done = !noGoal && goal > 0 && current >= goal;
+  const hasOtros = collapsibleDetails && collapsibleDetails.length > 0;
 
   return (
     <div className="bg-surface-container-low p-5 flex flex-col gap-4">
@@ -48,14 +56,40 @@ export default function ProgressCard({
         )}
       </div>
 
-      {details && details.length > 0 && (
+      {((details && details.length > 0) || hasOtros) && (
         <div className="flex flex-col gap-1.5">
-          {details.map((row) => (
+          {details?.map((row) => (
             <div key={row.label} className="flex items-center justify-between">
               <span className="text-xs text-on-surface-variant">{row.label}</span>
               <span className="text-xs font-medium text-on-surface tabular-nums">{row.value}</span>
             </div>
           ))}
+
+          {hasOtros && (
+            <>
+              <button
+                type="button"
+                onClick={() => setOtrosOpen((v) => !v)}
+                className="flex items-center justify-between pt-1"
+              >
+                <span className="text-xs text-on-surface-variant">Otros trabajos</span>
+                <span className="text-xs font-medium uppercase tracking-widest text-on-surface-variant">
+                  {otrosOpen ? "Ocultar" : "Ver"}
+                </span>
+              </button>
+
+              {otrosOpen && (
+                <div className="flex flex-col gap-1.5 pl-2 pt-0.5">
+                  {collapsibleDetails.map((row) => (
+                    <div key={row.label} className="flex items-center justify-between">
+                      <span className="text-xs text-on-surface-variant">{row.label}</span>
+                      <span className="text-xs font-medium text-on-surface tabular-nums">{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
 
