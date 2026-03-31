@@ -20,7 +20,6 @@ const AUXILIAR_OPTIONS: { hours: 15 | 30; label: string }[] = [
 export default function GoalSelector() {
   const { profile, loading, refreshProfile } = useProfile();
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
 
   // Local overrides — null means "use what's in profile"
   const [goalType, setGoalType] = useState<GoalType | null>(null);
@@ -53,8 +52,6 @@ export default function GoalSelector() {
       .eq("id", profile.id);
     await refreshProfile();
     setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
   }
 
   async function handleSelectMain(type: GoalType) {
@@ -155,17 +152,11 @@ export default function GoalSelector() {
             }
             className="bg-primary px-5 py-3 text-xs font-semibold uppercase tracking-widest text-on-primary disabled:opacity-40"
           >
-            {saving ? "..." : saved ? "Guardado" : "Guardar"}
+            {saving ? "..." : "Guardar"}
           </button>
         </div>
       )}
 
-      {/* Save feedback for non-custom types */}
-      {saved && currentGoal !== "custom" && (
-        <p className="text-xs font-medium text-primary uppercase tracking-widest">
-          Guardado
-        </p>
-      )}
     </div>
   );
 }
