@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { MonthData } from "@/lib/hooks/use-history";
 import { useCategories } from "@/lib/hooks/use-categories";
 import { getMonthName } from "@/lib/utils/dates";
+import { fmtHours } from "@/lib/utils/calculations";
 
 interface MonthlyCardProps {
   data: MonthData;
@@ -23,10 +24,6 @@ export default function MonthlyCard({ data, prev }: MonthlyCardProps) {
     (cat) => (data.otrosByCategory?.[cat.id] ?? 0) > 0
   );
 
-  function fmt(h: number) {
-    return h % 1 === 0 ? `${h}h` : `${h.toFixed(1)}h`;
-  }
-
   return (
     <div className="bg-surface-container-low p-5 flex flex-col gap-3">
       <div className="flex items-start justify-between">
@@ -39,14 +36,14 @@ export default function MonthlyCard({ data, prev }: MonthlyCardProps) {
               delta >= 0 ? "text-on-surface" : "text-secondary"
             }`}
           >
-            {delta >= 0 ? "↑" : "↓"} {Math.abs(delta).toFixed(1)}h
+            {delta >= 0 ? "↑" : "↓"} {fmtHours(Math.abs(delta))}
           </span>
         )}
       </div>
 
       <div className="flex items-end gap-1.5">
         <span className="text-3xl font-black tabular-nums text-primary leading-none">
-          {data.totalHours % 1 === 0 ? data.totalHours : data.totalHours.toFixed(1)}
+          {fmtHours(data.totalHours)}
         </span>
         <span className="text-sm text-on-surface-variant mb-0.5">hrs</span>
       </div>
@@ -55,7 +52,7 @@ export default function MonthlyCard({ data, prev }: MonthlyCardProps) {
         <div className="flex items-center justify-between">
           <span className="text-xs text-on-surface-variant">Predicación</span>
           <span className="text-xs font-medium text-on-surface tabular-nums">
-            {fmt(data.predicacionHours)}
+            {fmtHours(data.predicacionHours)}
           </span>
         </div>
 
@@ -80,7 +77,7 @@ export default function MonthlyCard({ data, prev }: MonthlyCardProps) {
                 <span className="text-xs text-on-surface-variant">{otrosOpen ? "▲" : "▼"}</span>
               </button>
               <span className="text-xs font-medium text-on-surface tabular-nums">
-                {fmt(data.otrosHours)}
+                {fmtHours(data.otrosHours)}
               </span>
             </div>
 
@@ -90,7 +87,7 @@ export default function MonthlyCard({ data, prev }: MonthlyCardProps) {
                   <div key={cat.id} className="flex items-center justify-between">
                     <span className="text-xs text-on-surface-variant">{cat.name}</span>
                     <span className="text-xs font-medium text-on-surface tabular-nums">
-                      {fmt(data.otrosByCategory[cat.id])}
+                      {fmtHours(data.otrosByCategory[cat.id])}
                     </span>
                   </div>
                 ))}

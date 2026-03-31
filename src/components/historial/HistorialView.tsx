@@ -2,6 +2,7 @@
 
 import { useHistory } from "@/lib/hooks/use-history";
 import { getServiceYear } from "@/lib/utils/dates";
+import { fmtHours } from "@/lib/utils/calculations";
 import MonthlyBarChart from "./MonthlyBarChart";
 import MonthlyCard from "./MonthlyCard";
 
@@ -40,7 +41,7 @@ export default function HistorialView() {
         <div className="text-right">
           <p className="text-xs text-on-surface-variant">Promedio mensual</p>
           <p className="text-lg font-black tabular-nums text-primary">
-            {avg % 1 === 0 ? avg : avg.toFixed(1)}h
+            {fmtHours(avg)}
           </p>
         </div>
       </div>

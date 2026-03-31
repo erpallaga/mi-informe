@@ -10,6 +10,7 @@ import {
   Cell,
 } from "recharts";
 import type { MonthData } from "@/lib/hooks/use-history";
+import { fmtHours } from "@/lib/utils/calculations";
 
 interface MonthlyBarChartProps {
   months: MonthData[];
@@ -47,7 +48,7 @@ export default function MonthlyBarChart({ months }: MonthlyBarChartProps) {
               boxShadow: "0 4px 40px rgba(26,28,29,0.04)",
             }}
             formatter={(value, name) => [
-              `${value}h`,
+              fmtHours(Number(value)),
               name === "predicacionHours" ? "Predicación" : "Otros",
             ]}
             labelFormatter={(label) => label}

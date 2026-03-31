@@ -1,6 +1,28 @@
 import type { ActivityEntry, GoalType } from "@/lib/types";
 import { GOAL_PRESETS } from "@/lib/types";
 
+/** Formats decimal hours as "h:mm" (e.g. 1.5 → "1:30", 0.5 → "0:30") */
+export function fmtHours(h: number): string {
+  const totalMin = Math.round(h * 60);
+  const hh = Math.floor(totalMin / 60);
+  const mm = totalMin % 60;
+  return `${hh}:${String(mm).padStart(2, "0")}`;
+}
+
+/** Parses "h:mm" or plain number string into decimal hours. Returns null if invalid. */
+export function parseHHMM(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (trimmed.includes(":")) {
+    const [hPart, mPart] = trimmed.split(":");
+    const h = parseInt(hPart, 10);
+    const m = parseInt(mPart, 10);
+    if (isNaN(h) || isNaN(m) || m < 0 || m > 59) return null;
+    return Math.round((h + m / 60) * 100) / 100;
+  }
+  const n = parseFloat(trimmed);
+  return isNaN(n) ? null : n;
+}
+
 /**
  * Monthly contribution toward the Precursor Regular annual goal (600h).
  * - No Otros: full total counts.

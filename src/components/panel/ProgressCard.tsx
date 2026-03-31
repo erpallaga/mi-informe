@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { fmtHours } from "@/lib/utils/calculations";
 
 interface DetailRow {
   label: string;
@@ -13,6 +14,7 @@ interface ProgressCardProps {
   goal: number;
   details?: DetailRow[];
   collapsibleDetails?: DetailRow[];
+  collapsibleTotal?: number;
   noGoal?: boolean;
 }
 
@@ -22,6 +24,7 @@ export default function ProgressCard({
   goal,
   details,
   collapsibleDetails,
+  collapsibleTotal,
   noGoal = false,
 }: ProgressCardProps) {
   const [otrosOpen, setOtrosOpen] = useState(false);
@@ -44,7 +47,7 @@ export default function ProgressCard({
 
       <div className="flex items-end gap-1.5">
         <span className="text-3xl font-black tabular-nums text-primary leading-none">
-          {current % 1 === 0 ? current : current.toFixed(1)}
+          {fmtHours(current)}
         </span>
         {!noGoal && (
           <span className="text-sm text-on-surface-variant mb-0.5">
@@ -77,10 +80,7 @@ export default function ProgressCard({
                   <span className="text-xs text-on-surface-variant">{otrosOpen ? "▲" : "▼"}</span>
                 </button>
                 <span className="text-xs font-medium text-on-surface tabular-nums">
-                  {collapsibleDetails.reduce((acc, r) => {
-                    const n = parseFloat(r.value);
-                    return acc + (isNaN(n) ? 0 : n);
-                  }, 0).toFixed(1).replace(/\.0$/, "")}h
+                  {collapsibleTotal !== undefined ? fmtHours(collapsibleTotal) : ""}
                 </span>
               </div>
 

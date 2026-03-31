@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { fmtHours, parseHHMM } from "@/lib/utils/calculations";
 
 interface HoursSpinnerProps {
   value: number;
@@ -18,6 +19,7 @@ export default function HoursSpinner({
   max = 24,
 }: HoursSpinnerProps) {
   const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   function decrement() {
@@ -30,12 +32,16 @@ export default function HoursSpinner({
     onChange(next);
   }
 
-  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const v = parseFloat(e.target.value);
-    if (!isNaN(v)) onChange(Math.min(max, Math.max(min, Math.round(v * 100) / 100)));
+  function startEdit() {
+    setDraft(fmtHours(value));
+    setEditing(true);
   }
 
   function commitEdit() {
+    const parsed = parseHHMM(draft);
+    if (parsed !== null) {
+      onChange(Math.min(max, Math.max(min, parsed)));
+    }
     setEditing(false);
   }
 
@@ -54,23 +60,21 @@ export default function HoursSpinner({
       {editing ? (
         <input
           ref={inputRef}
-          type="number"
-          value={value}
-          min={min}
-          max={max}
-          step={0.25}
+          type="text"
+          value={draft}
           autoFocus
-          onChange={handleInputChange}
+          onChange={(e) => setDraft(e.target.value)}
           onBlur={commitEdit}
           onKeyDown={(e) => e.key === "Enter" && commitEdit()}
-          className="w-12 text-center text-base font-semibold tabular-nums text-on-surface bg-surface-container-low outline-none py-1"
+          placeholder="0:00"
+          className="w-14 text-center text-base font-semibold tabular-nums text-on-surface bg-surface-container-low outline-none py-1"
         />
       ) : (
         <span
-          onClick={() => setEditing(true)}
-          className="w-12 text-center text-base font-semibold tabular-nums text-on-surface cursor-text select-none"
+          onClick={startEdit}
+          className="w-14 text-center text-base font-semibold tabular-nums text-on-surface cursor-text select-none"
         >
-          {value % 1 === 0 ? `${value}` : value.toFixed(2).replace(/\.?0+$/, "")}
+          {fmtHours(value)}
         </span>
       )}
 

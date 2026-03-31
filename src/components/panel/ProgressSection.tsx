@@ -4,12 +4,8 @@ import ProgressCard from "./ProgressCard";
 import { useProgress } from "@/lib/hooks/use-progress";
 import { useProfile } from "@/lib/hooks/use-profile";
 import { useCategories } from "@/lib/hooks/use-categories";
-import { getMonthlyGoalHours, getAnnualGoalHours } from "@/lib/utils/calculations";
+import { getMonthlyGoalHours, getAnnualGoalHours, fmtHours } from "@/lib/utils/calculations";
 import { getMonthName, getServiceYear } from "@/lib/utils/dates";
-
-function fmt(h: number) {
-  return h % 1 === 0 ? `${h}h` : `${h.toFixed(1)}h`;
-}
 
 export default function ProgressSection() {
   const { monthly, annual, annualCappedHours, loading: loadingProgress } = useProgress();
@@ -44,14 +40,14 @@ export default function ProgressSection() {
 
   // Monthly details (always visible)
   const monthlyDetails = [
-    { label: "Predicación", value: fmt(monthly?.predicacionHours ?? 0) },
+    { label: "Predicación", value: fmtHours(monthly?.predicacionHours ?? 0) },
     { label: "Cursos bíblicos", value: `${monthly?.cursosBiblicos ?? 0}` },
   ];
 
   // Monthly Otros (collapsible)
   const monthlyOtros = categories
     .filter((cat) => (monthly?.otrosByCategory?.[cat.id] ?? 0) > 0)
-    .map((cat) => ({ label: cat.name, value: fmt(monthly!.otrosByCategory[cat.id]) }));
+    .map((cat) => ({ label: cat.name, value: fmtHours(monthly!.otrosByCategory[cat.id]) }));
 
   // Annual details (always visible)
   const avgCursos = annual?.cursosBiblicos
@@ -59,14 +55,14 @@ export default function ProgressSection() {
     : "0";
 
   const annualDetails = [
-    { label: "Predicación", value: fmt(annual?.predicacionHours ?? 0) },
+    { label: "Predicación", value: fmtHours(annual?.predicacionHours ?? 0) },
     { label: "Promedio cursos / mes", value: avgCursos },
   ];
 
   // Annual Otros (collapsible)
   const annualOtros = categories
     .filter((cat) => (annual?.otrosByCategory?.[cat.id] ?? 0) > 0)
-    .map((cat) => ({ label: cat.name, value: fmt(annual!.otrosByCategory[cat.id]) }));
+    .map((cat) => ({ label: cat.name, value: fmtHours(annual!.otrosByCategory[cat.id]) }));
 
   return (
     <div className="flex flex-col gap-3">
@@ -76,6 +72,7 @@ export default function ProgressSection() {
         goal={monthlyGoal}
         details={monthlyDetails}
         collapsibleDetails={monthlyOtros}
+        collapsibleTotal={monthly?.otrosHours}
         noGoal={goalType === "publicador"}
       />
       <ProgressCard
@@ -84,6 +81,7 @@ export default function ProgressSection() {
         goal={annualGoal}
         details={annualDetails}
         collapsibleDetails={annualOtros}
+        collapsibleTotal={annual?.otrosHours}
         noGoal={goalType !== "precursor_regular"}
       />
     </div>
