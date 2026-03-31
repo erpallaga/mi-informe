@@ -67,16 +67,22 @@ export default function ProgressCard({
 
           {hasOtros && (
             <>
-              <button
-                type="button"
-                onClick={() => setOtrosOpen((v) => !v)}
-                className="flex items-center justify-between pt-1"
-              >
-                <span className="text-xs text-on-surface-variant">Otros trabajos</span>
-                <span className="text-xs font-medium uppercase tracking-widest text-on-surface-variant">
-                  {otrosOpen ? "Ocultar" : "Ver"}
+              <div className="flex items-center justify-between pt-1">
+                <button
+                  type="button"
+                  onClick={() => setOtrosOpen((v) => !v)}
+                  className="flex items-center gap-1.5"
+                >
+                  <span className="text-xs text-on-surface-variant">Otros trabajos</span>
+                  <span className="text-xs text-on-surface-variant">{otrosOpen ? "▲" : "▼"}</span>
+                </button>
+                <span className="text-xs font-medium text-on-surface tabular-nums">
+                  {collapsibleDetails.reduce((acc, r) => {
+                    const n = parseFloat(r.value);
+                    return acc + (isNaN(n) ? 0 : n);
+                  }, 0).toFixed(1).replace(/\.0$/, "")}h
                 </span>
-              </button>
+              </div>
 
               {otrosOpen && (
                 <div className="flex flex-col gap-1.5 pl-2 pt-0.5">

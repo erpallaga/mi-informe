@@ -70,16 +70,19 @@ export default function MonthlyCard({ data, prev }: MonthlyCardProps) {
 
         {otrosCategories.length > 0 && (
           <>
-            <button
-              type="button"
-              onClick={() => setOtrosOpen((v) => !v)}
-              className="flex items-center justify-between pt-0.5"
-            >
-              <span className="text-xs text-on-surface-variant">Otros trabajos</span>
-              <span className="text-xs font-medium uppercase tracking-widest text-on-surface-variant">
-                {otrosOpen ? "Ocultar" : "Ver"}
+            <div className="flex items-center justify-between pt-0.5">
+              <button
+                type="button"
+                onClick={() => setOtrosOpen((v) => !v)}
+                className="flex items-center gap-1.5"
+              >
+                <span className="text-xs text-on-surface-variant">Otros trabajos</span>
+                <span className="text-xs text-on-surface-variant">{otrosOpen ? "▲" : "▼"}</span>
+              </button>
+              <span className="text-xs font-medium text-on-surface tabular-nums">
+                {fmt(data.otrosHours)}
               </span>
-            </button>
+            </div>
 
             {otrosOpen && (
               <div className="flex flex-col gap-1.5 pl-2">
