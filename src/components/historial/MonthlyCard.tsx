@@ -52,23 +52,27 @@ export default function MonthlyCard({ data, categories }: MonthlyCardProps) {
           </div>
         )}
 
-        {otrosCategories.length > 0 && (
+        {data.otrosHours > 0 && (
           <>
             <div className="flex items-center justify-between pt-0.5">
-              <button
-                type="button"
-                onClick={() => setOtrosOpen((v) => !v)}
-                className="flex items-center gap-1.5"
-              >
+              {otrosCategories.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setOtrosOpen((v) => !v)}
+                  className="flex items-center gap-1.5"
+                >
+                  <span className="text-xs text-on-surface-variant">Otros trabajos</span>
+                  <span className="text-xs text-on-surface-variant">{otrosOpen ? "▲" : "▼"}</span>
+                </button>
+              ) : (
                 <span className="text-xs text-on-surface-variant">Otros trabajos</span>
-                <span className="text-xs text-on-surface-variant">{otrosOpen ? "▲" : "▼"}</span>
-              </button>
+              )}
               <span className="text-xs font-medium text-on-surface tabular-nums">
                 {fmtHours(data.otrosHours)}
               </span>
             </div>
 
-            {otrosOpen && (
+            {otrosOpen && otrosCategories.length > 0 && (
               <div className="flex flex-col gap-1.5 pl-2">
                 {otrosCategories.map((cat) => (
                   <div key={cat.id} className="flex items-center justify-between">
