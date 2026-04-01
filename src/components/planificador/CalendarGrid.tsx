@@ -2,6 +2,7 @@
 
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from "date-fns";
 import { formatMonthYear } from "@/lib/utils/dates";
+import { fmtHours } from "@/lib/utils/calculations";
 
 const WEEKDAYS = ["LU", "MA", "MI", "JU", "VI", "SA", "DO"];
 
@@ -9,17 +10,16 @@ function todayISO(): string {
   return new Date().toISOString().split("T")[0];
 }
 
-/** Returns 0-6 index where 0=Monday (date-fns getDay returns 0=Sunday) */
 function mondayIndex(date: Date): number {
-  const d = getDay(date); // 0=Sun, 1=Mon … 6=Sat
+  const d = getDay(date);
   return d === 0 ? 6 : d - 1;
 }
 
 interface CalendarGridProps {
   month: Date;
   selectedDate: string | null;
-  plannedDates: Set<string>;
-  actualDates: Set<string>;
+  plansByDate: Record<string, number>;
+  actualByDate: Record<string, number>;
   onSelectDay: (dateISO: string) => void;
   onPrev: () => void;
   onNext: () => void;
@@ -28,8 +28,8 @@ interface CalendarGridProps {
 export default function CalendarGrid({
   month,
   selectedDate,
-  plannedDates,
-  actualDates,
+  plansByDate,
+  actualByDate,
   onSelectDay,
   onPrev,
   onNext,
@@ -38,12 +38,10 @@ export default function CalendarGrid({
   const days = eachDayOfInterval({ start: startOfMonth(month), end: endOfMonth(month) });
   const firstOffset = mondayIndex(days[0]);
 
-  // Build grid cells: nulls for offset + actual days
   const cells: (Date | null)[] = [
     ...Array<null>(firstOffset).fill(null),
     ...days,
   ];
-  // Pad to multiple of 7
   while (cells.length % 7 !== 0) cells.push(null);
 
   return (
@@ -88,39 +86,54 @@ export default function CalendarGrid({
           const iso = format(day, "yyyy-MM-dd");
           const isSelected = iso === selectedDate;
           const isToday = iso === today;
-          const hasPlan = plannedDates.has(iso);
-          const hasActual = actualDates.has(iso);
+          const planHours = plansByDate[iso] ?? 0;
+          const actualHours = actualByDate[iso] ?? 0;
+          const hasPlan = planHours > 0;
+          const hasActual = actualHours > 0;
           const isOtherMonth = day.getMonth() !== month.getMonth();
 
           return (
             <button
               key={iso}
               onClick={() => onSelectDay(iso)}
-              className={`bg-surface-container-lowest aspect-square flex flex-col items-center justify-center gap-0.5 transition-colors ease-out ${
+              className={`bg-surface-container-lowest aspect-square flex flex-col items-center justify-center transition-colors ease-out ${
                 isOtherMonth ? "opacity-30" : ""
               } ${isSelected ? "!bg-primary" : ""}`}
             >
+              {/* Número del día — posición fija */}
               <span
-                className={`text-sm font-semibold tabular-nums ${
-                  isSelected
-                    ? "text-on-primary"
-                    : isToday
-                    ? "text-primary font-black"
-                    : "text-on-surface"
+                className={`text-xs font-black tabular-nums leading-none ${
+                  isSelected ? "text-on-primary" : isToday ? "text-primary" : "text-on-surface"
                 }`}
               >
                 {day.getDate()}
               </span>
-              {(hasPlan || hasActual) && (
-                <div className="flex gap-0.5">
-                  {hasPlan && (
-                    <span className={`w-1 h-1 ${isSelected ? "bg-on-primary" : "bg-primary"}`} />
-                  )}
-                  {hasActual && (
-                    <span className={`w-1 h-1 ${isSelected ? "bg-on-primary" : "bg-on-surface-variant"}`} />
-                  )}
-                </div>
-              )}
+
+              {/* Plan — siempre ocupa espacio para fijar la posición del número */}
+              <span
+                className={`text-[9px] tabular-nums leading-tight ${
+                  hasPlan
+                    ? isSelected
+                      ? "text-on-primary opacity-70"
+                      : "text-on-surface-variant"
+                    : "opacity-0 select-none"
+                }`}
+              >
+                {fmtHours(planHours)}
+              </span>
+
+              {/* Realizado — chip de fondo; siempre ocupa espacio */}
+              <span
+                className={`flex items-center justify-center text-[9px] font-semibold tabular-nums px-1 h-[14px] ${
+                  hasActual
+                    ? isSelected
+                      ? "bg-on-primary text-primary"
+                      : "bg-primary text-on-primary"
+                    : "opacity-0 select-none"
+                }`}
+              >
+                {fmtHours(actualHours)}
+              </span>
             </button>
           );
         })}

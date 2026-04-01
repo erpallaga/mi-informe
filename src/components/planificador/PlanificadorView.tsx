@@ -17,19 +17,24 @@ export default function PlanificadorView() {
   const { entries, loading: loadingEntries, prevMonth: eventoPrev, nextMonth: eventoNext } = useEventos();
   const [selectedDate, setSelectedDate] = useState<string>(todayISO);
 
-  const plannedDates = new Set(Object.keys(plans));
-  const actualDates = new Set(entries.map((e) => e.entry_date));
-  const selectedPlan = plans[selectedDate] ?? null;
+  // Horas planificadas por día
+  const plansByDate: Record<string, number> = {};
+  for (const [date, plan] of Object.entries(plans)) {
+    const otros = Object.values(plan.otros_hours).reduce((a, b) => a + b, 0);
+    plansByDate[date] = plan.predicacion_hours + otros;
+  }
 
-  const totalPlanned = Object.values(plans).reduce((sum, p) => {
-    const otros = Object.values(p.otros_hours).reduce((a, b) => a + b, 0);
-    return sum + p.predicacion_hours + otros;
-  }, 0);
-
-  const totalActual = entries.reduce((sum, e) => {
+  // Horas realizadas por día (suma de todas las entradas del día)
+  const actualByDate: Record<string, number> = {};
+  for (const e of entries) {
     const otros = Object.values(e.otros_hours).reduce((a, b) => a + b, 0);
-    return sum + e.predicacion_hours + otros;
-  }, 0);
+    actualByDate[e.entry_date] = (actualByDate[e.entry_date] ?? 0) + e.predicacion_hours + otros;
+  }
+
+  const totalPlanned = Object.values(plansByDate).reduce((a, b) => a + b, 0);
+  const totalActual = Object.values(actualByDate).reduce((a, b) => a + b, 0);
+
+  const selectedPlan = plans[selectedDate] ?? null;
 
   if (loading || loadingEntries) {
     return (
@@ -69,8 +74,8 @@ export default function PlanificadorView() {
       <CalendarGrid
         month={month}
         selectedDate={selectedDate}
-        plannedDates={plannedDates}
-        actualDates={actualDates}
+        plansByDate={plansByDate}
+        actualByDate={actualByDate}
         onSelectDay={setSelectedDate}
         onPrev={handlePrev}
         onNext={handleNext}
