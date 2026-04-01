@@ -26,14 +26,14 @@ export default function AppNav() {
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="flex h-16 items-center px-2">
-          <div className="flex flex-1 items-center justify-around">
+          <div className="flex flex-1 min-w-0 items-center justify-around">
             {LEFT_TABS.map((tab) => {
               const isActive = pathname.startsWith(tab.href);
               return (
                 <Link
                   key={tab.href}
                   href={tab.href}
-                  className={`flex h-9 items-center px-3 text-xs font-semibold uppercase tracking-widest transition-colors ease-out ${
+                  className={`flex h-9 items-center px-2 text-xs font-semibold uppercase tracking-widest transition-colors ease-out ${
                     isActive ? "bg-primary text-on-primary" : "text-on-surface-variant"
                   }`}
                 >
@@ -47,19 +47,19 @@ export default function AppNav() {
           <button
             onClick={() => setSheetOpen(true)}
             aria-label="Nueva entrada"
-            className="flex shrink-0 items-center justify-center w-14 h-14 mx-3 bg-primary text-on-primary text-2xl font-light shadow-ambient -translate-y-4 transition-opacity ease-out"
+            className="flex shrink-0 items-center justify-center w-14 h-14 mx-2 bg-primary text-on-primary text-2xl font-light shadow-ambient -translate-y-4 transition-opacity ease-out"
           >
             +
           </button>
 
-          <div className="flex flex-1 items-center justify-around">
+          <div className="flex flex-1 min-w-0 items-center justify-around">
             {RIGHT_TABS.map((tab) => {
               const isActive = pathname.startsWith(tab.href);
               return (
                 <Link
                   key={tab.href}
                   href={tab.href}
-                  className={`flex h-9 items-center px-3 text-xs font-semibold uppercase tracking-widest transition-colors ease-out ${
+                  className={`flex h-9 items-center px-2 text-xs font-semibold uppercase tracking-widest transition-colors ease-out ${
                     isActive ? "bg-primary text-on-primary" : "text-on-surface-variant"
                   }`}
                 >
