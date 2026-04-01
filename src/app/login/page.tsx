@@ -48,7 +48,7 @@ export default function LoginPage() {
         {/* Header */}
         <div className="mb-10 flex flex-col items-center text-center">
           <LogoIcon size={72} className="text-primary" />
-          <h1 className="mt-5 text-2xl font-semibold tracking-tight text-on-surface">
+          <h1 className="mt-5 text-2xl font-black tracking-tight text-on-surface">
             Mi Informe
           </h1>
           <p className="mt-1.5 text-sm text-on-surface-variant">
@@ -125,7 +125,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading || !email || !password}
-                className="mt-2 bg-primary px-4 py-3 text-sm font-medium text-on-primary disabled:opacity-40 transition-opacity ease-out"
+                className="mt-2 bg-primary px-4 py-3 text-sm font-semibold uppercase tracking-widest text-on-primary disabled:opacity-40 transition-opacity ease-out"
               >
                 {loading
                   ? "..."

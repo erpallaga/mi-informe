@@ -45,7 +45,7 @@ export default function AppNav() {
           <button
             onClick={() => setSheetOpen(true)}
             aria-label="Nueva entrada"
-            className="flex items-center justify-center w-14 h-14 mx-3 bg-primary text-on-primary text-2xl font-light shadow-ambient -translate-y-4 transition-opacity ease-out"
+            className="flex shrink-0 items-center justify-center w-14 h-14 mx-3 bg-primary text-on-primary text-2xl font-light shadow-ambient -translate-y-4 transition-opacity ease-out"
           >
             +
           </button>

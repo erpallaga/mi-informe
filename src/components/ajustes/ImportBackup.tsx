@@ -141,7 +141,7 @@ export default function ImportBackup() {
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="w-full py-4 text-sm font-medium bg-surface-container-low text-on-surface transition-colors ease-out active:bg-white"
+            className="w-full py-4 text-sm font-medium bg-surface-container-low text-on-surface transition-colors ease-out active:bg-surface-container-lowest"
           >
             Seleccionar archivo .mhbackup
           </button>

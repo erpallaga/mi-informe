@@ -33,7 +33,7 @@ export default function NewEntrySheet({
 
       {/* Sheet */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-white flex flex-col overflow-hidden transition-transform duration-300 ease-out ${
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest flex flex-col overflow-hidden transition-transform duration-300 ease-out ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
         style={{ height: "100dvh" }}

@@ -55,7 +55,7 @@ export default function EventCard({ entry, categories, onEdit, onDelete }: Event
   }
 
   return (
-    <div className="bg-white">
+    <div className="bg-surface-container-lowest">
       {/* Fecha — tappable */}
       <button
         onClick={handleToggle}
@@ -90,7 +90,7 @@ export default function EventCard({ entry, categories, onEdit, onDelete }: Event
 
       {/* Acciones — solo cuando expanded */}
       <div
-        className={`overflow-hidden transition-all duration-200 ease-out ${
+        className={`overflow-hidden transition-[max-height,opacity] duration-200 ease-out ${
           expanded ? "max-h-20 opacity-100" : "max-h-0 opacity-0"
         }`}
       >

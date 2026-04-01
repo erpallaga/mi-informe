@@ -61,7 +61,7 @@ export default function ProgressCard({
       {/* Glassmorphism overlay */}
       {showOverlay && (
         <div
-          className={`absolute inset-0 z-10 flex items-center justify-center backdrop-blur-[20px] bg-white/80 transition-opacity duration-500 ease-out ${
+          className={`absolute inset-0 z-10 flex items-center justify-center glass transition-opacity duration-500 ease-out ${
             overlayFading ? "opacity-0" : "opacity-100"
           }`}
         >
@@ -72,27 +72,27 @@ export default function ProgressCard({
       )}
 
       <div className="flex items-start justify-between gap-4">
-        <p className={`text-xs font-medium uppercase tracking-widest ${done ? "text-white/60" : "text-on-surface-variant"}`}>
+        <p className={`text-xs font-medium uppercase tracking-widest ${done ? "text-on-primary/60" : "text-on-surface-variant"}`}>
           {title}
         </p>
         {done && (
-          <span className="text-xs font-semibold uppercase tracking-widest text-white/80">
+          <span className="text-xs font-semibold uppercase tracking-widest text-on-primary/80">
             Cumplido
           </span>
         )}
       </div>
 
       <div className="flex items-end gap-1.5">
-        <span className={`text-3xl font-black tabular-nums leading-none ${done ? "text-white" : "text-primary"}`}>
+        <span className={`text-3xl font-black tabular-nums leading-none ${done ? "text-on-primary" : "text-primary"}`}>
           {fmtHours(current)}
         </span>
         {!noGoal && (
-          <span className={`text-sm mb-0.5 ${done ? "text-white/60" : "text-on-surface-variant"}`}>
+          <span className={`text-sm mb-0.5 ${done ? "text-on-primary/60" : "text-on-surface-variant"}`}>
             / {goal} hrs
           </span>
         )}
         {noGoal && (
-          <span className={`text-sm mb-0.5 ${done ? "text-white/60" : "text-on-surface-variant"}`}>hrs</span>
+          <span className={`text-sm mb-0.5 ${done ? "text-on-primary/60" : "text-on-surface-variant"}`}>hrs</span>
         )}
       </div>
 
@@ -100,8 +100,8 @@ export default function ProgressCard({
         <div className="flex flex-col gap-1.5">
           {details?.map((row) => (
             <div key={row.label} className="flex items-center justify-between">
-              <span className={`text-xs ${done ? "text-white/60" : "text-on-surface-variant"}`}>{row.label}</span>
-              <span className={`text-xs font-medium tabular-nums ${done ? "text-white/80" : "text-on-surface"}`}>{row.value}</span>
+              <span className={`text-xs ${done ? "text-on-primary/60" : "text-on-surface-variant"}`}>{row.label}</span>
+              <span className={`text-xs font-medium tabular-nums ${done ? "text-on-primary/80" : "text-on-surface"}`}>{row.value}</span>
             </div>
           ))}
 
@@ -113,10 +113,10 @@ export default function ProgressCard({
                   onClick={() => setOtrosOpen((v) => !v)}
                   className="flex items-center gap-1.5"
                 >
-                  <span className={`text-xs ${done ? "text-white/60" : "text-on-surface-variant"}`}>Otros trabajos</span>
-                  <span className={`text-xs ${done ? "text-white/60" : "text-on-surface-variant"}`}>{otrosOpen ? "▲" : "▼"}</span>
+                  <span className={`text-xs ${done ? "text-on-primary/60" : "text-on-surface-variant"}`}>Otros trabajos</span>
+                  <span className={`text-xs ${done ? "text-on-primary/60" : "text-on-surface-variant"}`}>{otrosOpen ? "▲" : "▼"}</span>
                 </button>
-                <span className={`text-xs font-medium tabular-nums ${done ? "text-white/80" : "text-on-surface"}`}>
+                <span className={`text-xs font-medium tabular-nums ${done ? "text-on-primary/80" : "text-on-surface"}`}>
                   {collapsibleTotal !== undefined ? fmtHours(collapsibleTotal) : ""}
                 </span>
               </div>
@@ -125,8 +125,8 @@ export default function ProgressCard({
                 <div className="flex flex-col gap-1.5 pl-2 pt-0.5">
                   {collapsibleDetails.map((row) => (
                     <div key={row.label} className="flex items-center justify-between">
-                      <span className={`text-xs ${done ? "text-white/60" : "text-on-surface-variant"}`}>{row.label}</span>
-                      <span className={`text-xs font-medium tabular-nums ${done ? "text-white/80" : "text-on-surface"}`}>{row.value}</span>
+                      <span className={`text-xs ${done ? "text-on-primary/60" : "text-on-surface-variant"}`}>{row.label}</span>
+                      <span className={`text-xs font-medium tabular-nums ${done ? "text-on-primary/80" : "text-on-surface"}`}>{row.value}</span>
                     </div>
                   ))}
                 </div>
@@ -137,9 +137,9 @@ export default function ProgressCard({
       )}
 
       {!noGoal && (
-        <div className={`h-1 w-full ${done ? "bg-white/20" : "bg-surface-container-high"}`}>
+        <div className={`h-1 w-full ${done ? "bg-on-primary/20" : "bg-surface-container-high"}`}>
           <div
-            className={`h-1 transition-all duration-500 ease-out ${done ? "bg-white" : "bg-primary"}`}
+            className={`h-1 transition-all duration-500 ease-out ${done ? "bg-on-primary" : "bg-primary"}`}
             style={{ width: `${pct}%` }}
           />
         </div>
