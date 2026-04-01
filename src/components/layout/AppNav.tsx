@@ -25,21 +25,23 @@ export default function AppNav() {
         className="fixed bottom-0 left-0 right-0 z-50 glass-70 shadow-ambient-sm"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="flex h-16 items-center justify-around px-2">
-          {LEFT_TABS.map((tab) => {
-            const isActive = pathname.startsWith(tab.href);
-            return (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                className={`flex h-9 items-center px-3 text-xs font-semibold uppercase tracking-widest transition-colors ease-out ${
-                  isActive ? "bg-primary text-on-primary" : "text-on-surface-variant"
-                }`}
-              >
-                {tab.label}
-              </Link>
-            );
-          })}
+        <div className="flex h-16 items-center px-2">
+          <div className="flex flex-1 items-center justify-around">
+            {LEFT_TABS.map((tab) => {
+              const isActive = pathname.startsWith(tab.href);
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  className={`flex h-9 items-center px-3 text-xs font-semibold uppercase tracking-widest transition-colors ease-out ${
+                    isActive ? "bg-primary text-on-primary" : "text-on-surface-variant"
+                  }`}
+                >
+                  {tab.label}
+                </Link>
+              );
+            })}
+          </div>
 
           {/* FAB central elevado */}
           <button
@@ -50,20 +52,22 @@ export default function AppNav() {
             +
           </button>
 
-          {RIGHT_TABS.map((tab) => {
-            const isActive = pathname.startsWith(tab.href);
-            return (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                className={`flex h-9 items-center px-3 text-xs font-semibold uppercase tracking-widest transition-colors ease-out ${
-                  isActive ? "bg-primary text-on-primary" : "text-on-surface-variant"
-                }`}
-              >
-                {tab.label}
-              </Link>
-            );
-          })}
+          <div className="flex flex-1 items-center justify-around">
+            {RIGHT_TABS.map((tab) => {
+              const isActive = pathname.startsWith(tab.href);
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  className={`flex h-9 items-center px-3 text-xs font-semibold uppercase tracking-widest transition-colors ease-out ${
+                    isActive ? "bg-primary text-on-primary" : "text-on-surface-variant"
+                  }`}
+                >
+                  {tab.label}
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </nav>
 
