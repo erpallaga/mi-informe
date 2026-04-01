@@ -69,7 +69,7 @@ export default function ImportBackup() {
       } else {
         const { data: newCat } = await supabase
           .from("categories")
-          .insert({ user_id: user.id, name: "Reembolso", sort_order: 9999, is_active: true })
+          .insert({ user_id: user.id, name: "Reembolso", sort_order: 9999, is_active: false })
           .select("id")
           .single();
 
