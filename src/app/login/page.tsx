@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import LogoIcon from "@/components/ui/LogoIcon";
 
 type Mode = "login" | "signup";
 
@@ -45,12 +46,12 @@ export default function LoginPage() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-surface px-6">
       <div className="w-full max-w-sm">
         {/* Header */}
-        <div className="mb-10">
-          <h1 className="text-3xl font-black tracking-tight text-primary">
-            MI INFORME
+        <div className="mb-10 flex flex-col items-center text-center">
+          <LogoIcon size={72} className="text-primary" />
+          <h1 className="mt-5 text-2xl font-semibold tracking-tight text-on-surface">
+            Mi Informe
           </h1>
-          <div className="mt-1.5 h-0.5 w-10 bg-primary" />
-          <p className="mt-4 text-sm text-on-surface-variant">
+          <p className="mt-1.5 text-sm text-on-surface-variant">
             Registro de actividad y progreso
           </p>
         </div>
