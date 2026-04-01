@@ -104,3 +104,33 @@ CREATE POLICY "Users can update own entries"
   ON public.activity_entries FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own entries"
   ON public.activity_entries FOR DELETE USING (auth.uid() = user_id);
+
+-- ================================================
+-- DAILY PLANS TABLE (Planificador)
+-- ================================================
+CREATE TABLE public.daily_plans (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id           UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  plan_date         DATE NOT NULL,
+  predicacion_hours NUMERIC(5,2) NOT NULL DEFAULT 0,
+  cursos_biblicos   INTEGER NOT NULL DEFAULT 0,
+  otros_hours       JSONB NOT NULL DEFAULT '{}'::jsonb,
+  notes             TEXT,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (user_id, plan_date)
+);
+
+CREATE INDEX idx_daily_plans_user_date
+  ON public.daily_plans(user_id, plan_date);
+
+ALTER TABLE public.daily_plans ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own plans"
+  ON public.daily_plans FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own plans"
+  ON public.daily_plans FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own plans"
+  ON public.daily_plans FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own plans"
+  ON public.daily_plans FOR DELETE USING (auth.uid() = user_id);

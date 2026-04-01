@@ -5,27 +5,36 @@ import HoursSpinner from "./HoursSpinner";
 import CountSpinner from "./CountSpinner";
 import { useCategories } from "@/lib/hooks/use-categories";
 import { useActivity } from "@/lib/hooks/use-activity";
+import type { ActivityEntry } from "@/lib/types";
 
 function todayISO(): string {
   const d = new Date();
   return d.toISOString().split("T")[0];
 }
 
+interface QuickEntryFormProps {
+  onSuccess?: () => void;
+  defaultOtrosOpen?: boolean;
+  editEntry?: ActivityEntry;
+}
+
 export default function QuickEntryForm({
   onSuccess,
   defaultOtrosOpen = false,
-}: {
-  onSuccess?: () => void;
-  defaultOtrosOpen?: boolean;
-}) {
-  const [date, setDate] = useState(todayISO());
-  const [predicacionHours, setPredicacionHours] = useState(0);
-  const [cursosBiblicos, setCursosBiblicos] = useState(0);
-  const [otrosHours, setOtrosHours] = useState<Record<string, number>>({});
-  const [otrosOpen, setOtrosOpen] = useState(defaultOtrosOpen);
+  editEntry,
+}: QuickEntryFormProps) {
+  const isEdit = !!editEntry;
+
+  const [date, setDate] = useState(editEntry?.entry_date ?? todayISO());
+  const [predicacionHours, setPredicacionHours] = useState(editEntry?.predicacion_hours ?? 0);
+  const [cursosBiblicos, setCursosBiblicos] = useState(editEntry?.cursos_biblicos ?? 0);
+  const [otrosHours, setOtrosHours] = useState<Record<string, number>>(
+    editEntry?.otros_hours ?? {}
+  );
+  const [otrosOpen, setOtrosOpen] = useState(defaultOtrosOpen || isEdit);
 
   const { categories, loading: loadingCats } = useCategories();
-  const { insertEntry, loading: submitting, error } = useActivity();
+  const { insertEntry, updateEntry, loading: submitting, error } = useActivity();
 
   function setOtroHours(id: string, value: number) {
     setOtrosHours((prev) => ({ ...prev, [id]: value }));
@@ -34,26 +43,39 @@ export default function QuickEntryForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    // Filter out zero-value otros
     const filteredOtros = Object.fromEntries(
       Object.entries(otrosHours).filter(([, v]) => v > 0)
     );
 
-    const ok = await insertEntry({
+    const input = {
       entry_date: date,
       predicacion_hours: predicacionHours,
       cursos_biblicos: cursosBiblicos,
       otros_hours: filteredOtros,
-    });
+    };
+
+    let ok: boolean;
+    if (isEdit && editEntry) {
+      ok = await updateEntry(editEntry.id, input);
+    } else {
+      ok = await insertEntry(input);
+      if (ok) {
+        setPredicacionHours(0);
+        setCursosBiblicos(0);
+        setOtrosHours({});
+        setDate(todayISO());
+      }
+    }
 
     if (ok) {
-      setPredicacionHours(0);
-      setCursosBiblicos(0);
-      setOtrosHours({});
-      setDate(todayISO());
       onSuccess?.();
     }
   }
+
+  const isEmpty =
+    predicacionHours === 0 &&
+    cursosBiblicos === 0 &&
+    Object.values(otrosHours).every((v) => v === 0);
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -133,10 +155,12 @@ export default function QuickEntryForm({
       {/* Submit */}
       <button
         type="submit"
-        disabled={submitting || (predicacionHours === 0 && cursosBiblicos === 0 && Object.values(otrosHours).every((v) => v === 0))}
+        disabled={submitting || (!isEdit && isEmpty)}
         className="sticky bottom-0 bg-primary py-4 text-sm font-semibold uppercase tracking-widest text-on-primary disabled:opacity-40 transition-opacity ease-out"
       >
-        {submitting ? "Registrando..." : "Registrar Actividad"}
+        {submitting
+          ? isEdit ? "Guardando..." : "Registrando..."
+          : isEdit ? "Guardar cambios" : "Registrar Actividad"}
       </button>
     </form>
   );

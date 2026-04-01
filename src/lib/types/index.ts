@@ -42,6 +42,18 @@ export interface ActivityEntry {
   updated_at: string;
 }
 
+export interface DailyPlan {
+  id: string;
+  user_id: string;
+  plan_date: string; // ISO date
+  predicacion_hours: number;
+  cursos_biblicos: number;
+  otros_hours: Record<string, number>;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface MonthlyProgress {
   month: number;
   year: number;

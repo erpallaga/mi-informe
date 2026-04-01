@@ -6,12 +6,13 @@ import { usePathname } from "next/navigation";
 import NewEntrySheet from "@/components/panel/NewEntrySheet";
 
 const LEFT_TABS = [
-  { label: "Panel", href: "/panel" },
+  { label: "Panel",     href: "/panel" },
   { label: "Historial", href: "/historial" },
 ];
 
 const RIGHT_TABS = [
-  { label: "Ajustes", href: "/ajustes" },
+  { label: "Plan.",   href: "/planificador" },
+  { label: "Eventos", href: "/eventos" },
 ];
 
 export default function AppNav() {
@@ -31,7 +32,7 @@ export default function AppNav() {
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`flex h-9 items-center px-5 text-xs font-semibold uppercase tracking-widest transition-colors ease-out ${
+                className={`flex h-9 items-center px-3 text-xs font-semibold uppercase tracking-widest transition-colors ease-out ${
                   isActive ? "bg-primary text-on-primary" : "text-on-surface-variant"
                 }`}
               >
@@ -55,7 +56,7 @@ export default function AppNav() {
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`flex h-9 items-center px-5 text-xs font-semibold uppercase tracking-widest transition-colors ease-out ${
+                className={`flex h-9 items-center px-3 text-xs font-semibold uppercase tracking-widest transition-colors ease-out ${
                   isActive ? "bg-primary text-on-primary" : "text-on-surface-variant"
                 }`}
               >

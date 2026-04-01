@@ -1,14 +1,21 @@
 "use client";
 
 import QuickEntryForm from "./QuickEntryForm";
+import type { ActivityEntry } from "@/lib/types";
 
 interface NewEntrySheetProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  editEntry?: ActivityEntry;
 }
 
-export default function NewEntrySheet({ open, onClose, onSuccess }: NewEntrySheetProps) {
+export default function NewEntrySheet({
+  open,
+  onClose,
+  onSuccess,
+  editEntry,
+}: NewEntrySheetProps) {
   function handleSuccess() {
     onSuccess();
     onClose();
@@ -34,7 +41,7 @@ export default function NewEntrySheet({ open, onClose, onSuccess }: NewEntryShee
         {/* Header */}
         <div className="flex-shrink-0 flex items-center justify-between px-6 pt-4 pb-4">
           <p className="text-xs font-medium uppercase tracking-widest text-on-surface-variant">
-            Nueva entrada
+            {editEntry ? "Editar entrada" : "Nueva entrada"}
           </p>
           <button
             type="button"
@@ -47,7 +54,11 @@ export default function NewEntrySheet({ open, onClose, onSuccess }: NewEntryShee
 
         {/* Scrollable form area */}
         <div className="flex-1 overflow-y-auto px-6 pb-6">
-          <QuickEntryForm defaultOtrosOpen={true} onSuccess={handleSuccess} />
+          <QuickEntryForm
+            defaultOtrosOpen={true}
+            onSuccess={handleSuccess}
+            editEntry={editEntry}
+          />
         </div>
       </div>
     </>

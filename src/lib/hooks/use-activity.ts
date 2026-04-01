@@ -48,5 +48,53 @@ export function useActivity() {
     return true;
   }
 
-  return { insertEntry, loading, error };
+  async function updateEntry(id: string, input: ActivityInput): Promise<boolean> {
+    setLoading(true);
+    setError(null);
+
+    const supabase = createClient();
+    const { error: updateError } = await supabase
+      .from("activity_entries")
+      .update({
+        entry_date: input.entry_date,
+        predicacion_hours: input.predicacion_hours,
+        cursos_biblicos: input.cursos_biblicos,
+        otros_hours: input.otros_hours,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (updateError) {
+      setError(updateError.message);
+      setLoading(false);
+      return false;
+    }
+
+    setLoading(false);
+    window.dispatchEvent(new CustomEvent("mi-informe:entry-created"));
+    return true;
+  }
+
+  async function deleteEntry(id: string): Promise<boolean> {
+    setLoading(true);
+    setError(null);
+
+    const supabase = createClient();
+    const { error: deleteError } = await supabase
+      .from("activity_entries")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) {
+      setError(deleteError.message);
+      setLoading(false);
+      return false;
+    }
+
+    setLoading(false);
+    window.dispatchEvent(new CustomEvent("mi-informe:entry-created"));
+    return true;
+  }
+
+  return { insertEntry, updateEntry, deleteEntry, loading, error };
 }
