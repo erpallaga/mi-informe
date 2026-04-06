@@ -5,7 +5,7 @@ import { useHistory } from "@/lib/hooks/use-history";
 import { useCategories } from "@/lib/hooks/use-categories";
 import { useProfile } from "@/lib/hooks/use-profile";
 import { getServiceYear } from "@/lib/utils/dates";
-import { fmtHours, getAnnualGoalHours } from "@/lib/utils/calculations";
+import { getAnnualGoalHours } from "@/lib/utils/calculations";
 import MonthlyBarChart from "./MonthlyBarChart";
 import MonthlyCard from "./MonthlyCard";
 import CumulativeAreaChart from "./CumulativeAreaChart";
@@ -33,10 +33,6 @@ export default function HistorialView() {
       </div>
     );
   }
-
-  const totalHours = months.reduce((s, m) => s + m.totalHours, 0);
-  const monthsWithData = months.filter((m) => m.entriesCount > 0);
-  const avg = monthsWithData.length > 0 ? totalHours / monthsWithData.length : 0;
 
   const currentIndex = months.findIndex((m) => m.isCurrentMonth);
   const visibleMonths = isCurrentYear && currentIndex >= 0 ? months.slice(0, currentIndex + 1) : months;
@@ -69,12 +65,6 @@ export default function HistorialView() {
               Sig. →
             </button>
           </div>
-        </div>
-        <div className="text-right">
-          <p className="text-xs text-on-surface-variant">Promedio mensual</p>
-          <p className="text-lg font-black tabular-nums text-primary">
-            {fmtHours(avg)}
-          </p>
         </div>
       </div>
 

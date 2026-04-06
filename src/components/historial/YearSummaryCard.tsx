@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { MonthData } from "@/lib/hooks/use-history";
 import type { Category } from "@/lib/types";
-import { fmtHours } from "@/lib/utils/calculations";
+import { fmtHours, monthlyAnnualContribution } from "@/lib/utils/calculations";
 
 interface YearSummaryCardProps {
   months: MonthData[];
@@ -27,6 +27,19 @@ export default function YearSummaryCard({ months, categories }: YearSummaryCardP
 
   const otrosCategories = categories.filter((cat) => (otrosByCategory[cat.id] ?? 0) > 0);
 
+  const monthsWithData = months.filter((m) => m.entriesCount > 0);
+  const n = monthsWithData.length || 1;
+
+  // Averages
+  const predicacionAvg = predicacionTotal / n;
+  const otrosAvg = otrosTotal / n;
+  const totalAvg = totalHours / n;
+  const informadasAvg =
+    monthsWithData.reduce(
+      (s, m) => s + monthlyAnnualContribution(m.predicacionHours, m.otrosHours),
+      0
+    ) / n;
+
   const pctOf = (part: number) =>
     totalHours > 0 ? Math.round((part / totalHours) * 100) : 0;
 
@@ -34,7 +47,7 @@ export default function YearSummaryCard({ months, categories }: YearSummaryCardP
 
   return (
     <div className="bg-surface-container-low px-4 py-4 flex flex-col gap-3">
-      {/* Total + progreso */}
+      {/* Header: total + promedios */}
       <div className="flex items-end justify-between">
         <div>
           <p className="text-xs font-medium uppercase tracking-widest text-on-surface-variant">
@@ -42,6 +55,17 @@ export default function YearSummaryCard({ months, categories }: YearSummaryCardP
           </p>
           <p className="text-2xl font-black tabular-nums text-primary leading-none mt-0.5">
             {fmtHours(totalHours)}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs text-on-surface-variant">Promedio mensual</p>
+          <p className="text-xs tabular-nums text-on-surface-variant mt-0.5">
+            Informadas{" "}
+            <span className="font-semibold text-on-surface">{fmtHours(informadasAvg)}</span>
+          </p>
+          <p className="text-xs tabular-nums text-on-surface-variant">
+            Total{" "}
+            <span className="font-semibold text-on-surface">{fmtHours(totalAvg)}</span>
           </p>
         </div>
       </div>
@@ -52,6 +76,9 @@ export default function YearSummaryCard({ months, categories }: YearSummaryCardP
         <div className="flex items-center justify-between">
           <span className="text-xs text-on-surface-variant">Predicación</span>
           <div className="flex items-center gap-2">
+            <span className="text-[10px] text-on-surface-variant tabular-nums">
+              {fmtHours(predicacionAvg)}/mes
+            </span>
             <span className="text-[10px] text-on-surface-variant tabular-nums">
               {pctOf(predicacionTotal)}%
             </span>
@@ -79,6 +106,9 @@ export default function YearSummaryCard({ months, categories }: YearSummaryCardP
               )}
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-on-surface-variant tabular-nums">
+                  {fmtHours(otrosAvg)}/mes
+                </span>
+                <span className="text-[10px] text-on-surface-variant tabular-nums">
                   {pctOf(otrosTotal)}%
                 </span>
                 <span className="text-xs font-medium text-on-surface tabular-nums w-14 text-right">
@@ -89,14 +119,23 @@ export default function YearSummaryCard({ months, categories }: YearSummaryCardP
 
             {otrosOpen && otrosCategories.length > 0 && (
               <div className="flex flex-col gap-1.5 pl-3">
-                {otrosCategories.map((cat) => (
-                  <div key={cat.id} className="flex items-center justify-between">
-                    <span className="text-xs text-on-surface-variant">{cat.name}</span>
-                    <span className="text-xs font-medium text-on-surface tabular-nums w-14 text-right">
-                      {fmtHours(otrosByCategory[cat.id])}
-                    </span>
-                  </div>
-                ))}
+                {otrosCategories.map((cat) => {
+                  const catTotal = otrosByCategory[cat.id];
+                  const catAvg = catTotal / n;
+                  return (
+                    <div key={cat.id} className="flex items-center justify-between">
+                      <span className="text-xs text-on-surface-variant">{cat.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-on-surface-variant tabular-nums">
+                          {fmtHours(catAvg)}/mes
+                        </span>
+                        <span className="text-xs font-medium text-on-surface tabular-nums w-14 text-right">
+                          {fmtHours(catTotal)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </>
