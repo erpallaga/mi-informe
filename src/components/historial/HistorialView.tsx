@@ -44,22 +44,22 @@ export default function HistorialView() {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="flex flex-col items-center gap-0.5">
-        <p className="text-xs font-medium uppercase tracking-widest text-on-surface-variant">
+      <div className="flex flex-col gap-0.5">
+        <p className="text-xs font-medium uppercase tracking-widest text-on-surface-variant text-center">
           Resumen
         </p>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between">
           <button
             onClick={() => setStartYear((y) => y - 1)}
-            className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant py-1 pr-2"
+            className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant py-1 pr-3"
           >
             ← Ant.
           </button>
-          <p className="text-2xl font-black text-primary">{label}</p>
+          <p className="text-sm font-black tracking-tight text-primary">{label}</p>
           <button
             onClick={() => setStartYear((y) => y + 1)}
             disabled={isCurrentYear}
-            className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant py-1 pl-2 disabled:opacity-30"
+            className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant py-1 pl-3 disabled:opacity-30"
           >
             Sig. →
           </button>
