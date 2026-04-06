@@ -44,27 +44,25 @@ export default function HistorialView() {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="flex items-end justify-between">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-widest text-on-surface-variant">
-            Resumen
-          </p>
-          <div className="flex items-center gap-3 mt-0.5">
-            <button
-              onClick={() => setStartYear((y) => y - 1)}
-              className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant py-1 pr-2"
-            >
-              ← Ant.
-            </button>
-            <p className="text-2xl font-black text-primary">{label}</p>
-            <button
-              onClick={() => setStartYear((y) => y + 1)}
-              disabled={isCurrentYear}
-              className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant py-1 pl-2 disabled:opacity-30"
-            >
-              Sig. →
-            </button>
-          </div>
+      <div className="flex flex-col items-center gap-0.5">
+        <p className="text-xs font-medium uppercase tracking-widest text-on-surface-variant">
+          Resumen
+        </p>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setStartYear((y) => y - 1)}
+            className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant py-1 pr-2"
+          >
+            ← Ant.
+          </button>
+          <p className="text-2xl font-black text-primary">{label}</p>
+          <button
+            onClick={() => setStartYear((y) => y + 1)}
+            disabled={isCurrentYear}
+            className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant py-1 pl-2 disabled:opacity-30"
+          >
+            Sig. →
+          </button>
         </div>
       </div>
 
