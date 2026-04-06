@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   ComposedChart,
   Area,
@@ -24,21 +25,24 @@ export default function CumulativeAreaChart({
   annualGoal,
   isCurrentYear,
 }: CumulativeAreaChartProps) {
-  const currentIndex = months.findIndex((m) => m.isCurrentMonth);
-  const visibleMonths =
-    isCurrentYear && currentIndex >= 0 ? months.slice(0, currentIndex + 1) : months;
+  const { data, yMax } = useMemo(() => {
+    const currentIndex = months.findIndex((m) => m.isCurrentMonth);
+    const visibleMonths =
+      isCurrentYear && currentIndex >= 0 ? months.slice(0, currentIndex + 1) : months;
 
-  let cumPred = 0;
-  let cumOtros = 0;
-  const data = visibleMonths.map((m, i) => {
-    cumPred += m.predicacionHours;
-    cumOtros += m.otrosHours;
-    const ideal = annualGoal > 0 ? ((i + 1) * annualGoal) / 12 : undefined;
-    return { label: m.label, predicacion: cumPred, otros: cumOtros, ideal };
-  });
+    let cumPred = 0;
+    let cumOtros = 0;
+    const data = visibleMonths.map((m, i) => {
+      cumPred += m.predicacionHours;
+      cumOtros += m.otrosHours;
+      const ideal = annualGoal > 0 ? ((i + 1) * annualGoal) / 12 : undefined;
+      return { label: m.label, predicacion: cumPred, otros: cumOtros, ideal };
+    });
 
-  const maxCumulative = cumPred + cumOtros;
-  const yMax = annualGoal > 0 ? Math.max(annualGoal, maxCumulative) * 1.05 : maxCumulative * 1.1;
+    const maxCumulative = cumPred + cumOtros;
+    const yMax = annualGoal > 0 ? Math.max(annualGoal, maxCumulative) * 1.05 : maxCumulative * 1.1;
+    return { data, yMax };
+  }, [months, annualGoal, isCurrentYear]);
 
   return (
     <div className="h-44 w-full">

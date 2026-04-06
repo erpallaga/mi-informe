@@ -15,47 +15,118 @@ interface ProgressData {
   entriesCount: number;
 }
 
-export function useProgress() {
-  const [monthly, setMonthly] = useState<ProgressData | null>(null);
-  const [annual, setAnnual] = useState<ProgressData | null>(null);
-  const [annualCappedHours, setAnnualCappedHours] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const hasDataRef = useRef(false);
+interface CachedProgress {
+  monthly: ProgressData;
+  annual: ProgressData;
+  annualCappedHours: number;
+}
 
-  function fetchData() {
-    // Only show loading skeleton on the very first fetch.
-    // On subsequent refreshes keep cards mounted so the celebration
-    // animation in ProgressCard can detect the goal-crossing event.
-    if (!hasDataRef.current) setLoading(true);
+type Setter = (data: CachedProgress) => void;
 
+// Module-level cache shared across all hook instances.
+// Invalidated on entry-created events and when the calendar month changes.
+let cachedData: CachedProgress | null = null;
+let cachedMonthKey: string | null = null; // "YYYY-MM" — used to detect month rollover
+let fetchPromise: Promise<void> | null = null;
+const setters = new Set<Setter>();
+
+function getCurrentMonthKey(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  return `${y}-${m}`;
+}
+
+function notifyAll(data: CachedProgress) {
+  setters.forEach((fn) => fn(data));
+}
+
+function fetchAndCache(): Promise<void> {
+  if (fetchPromise) return fetchPromise;
+  fetchPromise = (async () => {
     const supabase = createClient();
     const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
     const serviceYear = getServiceYear(now);
+    const monthKey = getCurrentMonthKey();
 
-    const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
-    const monthEnd = new Date(year, month, 0);
-    const monthEndStr = `${year}-${String(month).padStart(2, "0")}-${String(monthEnd.getDate()).padStart(2, "0")}`;
+    // Single query for the full service year — month is filtered client-side.
+    const { data } = await supabase
+      .from("activity_entries")
+      .select("*")
+      .gte("entry_date", serviceYear.start)
+      .lte("entry_date", serviceYear.end);
 
-    Promise.all([
-      supabase.from("activity_entries").select("*").gte("entry_date", monthStart).lte("entry_date", monthEndStr),
-      supabase.from("activity_entries").select("*").gte("entry_date", serviceYear.start).lte("entry_date", serviceYear.end),
-    ]).then(([monthRes, yearRes]) => {
-      const annualEntries = (yearRes.data ?? []) as ActivityEntry[];
-      setMonthly(aggregateEntries((monthRes.data ?? []) as ActivityEntry[]));
-      setAnnual(aggregateEntries(annualEntries));
-      setAnnualCappedHours(aggregateAnnualCapped(annualEntries));
-      hasDataRef.current = true;
-      setLoading(false);
-    });
-  }
+    const allEntries = (data ?? []) as ActivityEntry[];
+    const monthEntries = allEntries.filter((e) =>
+      e.entry_date.startsWith(monthKey)
+    );
+
+    const result: CachedProgress = {
+      monthly: aggregateEntries(monthEntries),
+      annual: aggregateEntries(allEntries),
+      annualCappedHours: aggregateAnnualCapped(allEntries),
+    };
+
+    cachedData = result;
+    cachedMonthKey = monthKey;
+    fetchPromise = null;
+    notifyAll(result);
+  })();
+  return fetchPromise;
+}
+
+function invalidateAndRefresh() {
+  cachedData = null;
+  cachedMonthKey = null;
+  fetchPromise = null;
+  fetchAndCache();
+}
+
+export function useProgress() {
+  const [data, setData] = useState<CachedProgress | null>(cachedData);
+  const [loading, setLoading] = useState(cachedData === null);
+  // Only show the loading skeleton on the very first fetch so that
+  // the celebration animation in ProgressCard survives silent refreshes.
+  const hasLoadedRef = useRef(cachedData !== null);
 
   useEffect(() => {
-    fetchData();
-    window.addEventListener("mi-informe:entry-created", fetchData);
-    return () => window.removeEventListener("mi-informe:entry-created", fetchData);
+    let mounted = true;
+    setters.add(setData);
+
+    const currentMonthKey = getCurrentMonthKey();
+    const cacheValid = cachedData !== null && cachedMonthKey === currentMonthKey;
+
+    if (cacheValid) {
+      // Instant return from cache — no network request.
+      setData(cachedData!);
+      setLoading(false);
+      hasLoadedRef.current = true;
+    } else {
+      if (!hasLoadedRef.current) setLoading(true);
+      fetchAndCache().then(() => {
+        if (mounted) {
+          setLoading(false);
+          hasLoadedRef.current = true;
+        }
+      });
+    }
+
+    function onEntryCreated() {
+      invalidateAndRefresh();
+    }
+
+    window.addEventListener("mi-informe:entry-created", onEntryCreated);
+    return () => {
+      mounted = false;
+      setters.delete(setData);
+      window.removeEventListener("mi-informe:entry-created", onEntryCreated);
+    };
   }, []);
 
-  return { monthly, annual, annualCappedHours, loading };
+  return {
+    monthly: data?.monthly ?? null,
+    annual: data?.annual ?? null,
+    annualCappedHours: data?.annualCappedHours ?? 0,
+    loading,
+  };
 }
