@@ -33,6 +33,19 @@ NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 ```
 
+## Tests
+
+```bash
+npm test          # modo watch
+npm run test:run  # una sola pasada
+npm run test:coverage
+```
+
+Cubren la lógica de negocio crítica en `src/lib/utils/`:
+
+- **`calculations`** — `fmtHours`, `parseHHMM`, `sumOtrosHours`, `monthlyAnnualContribution`, `aggregateAnnualCapped` y helpers de objetivo
+- **`dates`** — `getServiceYear` (año de servicio sept–ago), `formatMonthShort`, `getMonthName`
+
 ## Build
 
 ```bash
