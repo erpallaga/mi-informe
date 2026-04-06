@@ -4,39 +4,55 @@ import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/types";
 
-// Module-level listener set so all mounted instances of useProfile
-// receive the updated profile when any one of them calls refreshProfile.
 type ProfileSetter = (p: Profile | null) => void;
 const listeners = new Set<ProfileSetter>();
 
-async function fetchProfile(): Promise<Profile | null> {
-  const supabase = createClient();
-  const { data } = await supabase.from("profiles").select("*").single();
-  return data ?? null;
-}
+// undefined = not fetched yet, null = fetched but no profile row
+let cachedProfile: Profile | null | undefined = undefined;
+let fetchPromise: Promise<void> | null = null;
 
-function notifyAll(profile: Profile | null) {
-  listeners.forEach((fn) => fn(profile));
+function doFetch(): Promise<void> {
+  if (fetchPromise) return fetchPromise;
+  fetchPromise = Promise.resolve(
+    createClient().from("profiles").select("*").single()
+  ).then(({ data }) => {
+    cachedProfile = data ?? null;
+    fetchPromise = null;
+    listeners.forEach((fn) => fn(cachedProfile!));
+  });
+  return fetchPromise;
 }
 
 export function useProfile() {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<Profile | null>(
+    cachedProfile !== undefined ? cachedProfile : null
+  );
+  const [loading, setLoading] = useState(cachedProfile === undefined);
 
   useEffect(() => {
+    let mounted = true;
     listeners.add(setProfile);
-    fetchProfile().then((data) => {
-      setProfile(data);
+
+    if (cachedProfile !== undefined) {
+      // Cache hit — serve immediately.
+      setProfile(cachedProfile);
       setLoading(false);
-    });
+    } else {
+      doFetch().then(() => {
+        if (mounted) setLoading(false);
+      });
+    }
+
     return () => {
+      mounted = false;
       listeners.delete(setProfile);
     };
   }, []);
 
   const refreshProfile = useCallback(async () => {
-    const data = await fetchProfile();
-    notifyAll(data);
+    cachedProfile = undefined;
+    fetchPromise = null;
+    await doFetch();
   }, []);
 
   return { profile, loading, refreshProfile };

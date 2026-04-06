@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { ActivityEntry } from "@/lib/types";
 
@@ -59,13 +59,18 @@ export function useEventos() {
     fetchEntries(true);
   }, [fetchEntries]);
 
+  // Stable ref so the event listener never needs to be torn down and re-created
+  // when the month changes — it always calls the latest fetchEntries.
+  const fetchEntriesRef = useRef(fetchEntries);
+  fetchEntriesRef.current = fetchEntries;
+
   useEffect(() => {
     function onEntryChange() {
-      fetchEntries(false);
+      fetchEntriesRef.current(false);
     }
     window.addEventListener("mi-informe:entry-created", onEntryChange);
     return () => window.removeEventListener("mi-informe:entry-created", onEntryChange);
-  }, [fetchEntries]);
+  }, []); // runs once — ref always points to current fetchEntries
 
   function prevMonth() {
     setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1));
