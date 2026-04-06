@@ -24,13 +24,24 @@ export default function CumulativeAreaChart({
   annualGoal,
 }: CumulativeAreaChartProps) {
   const { data, yMax } = useMemo(() => {
+    // -1 means past year (no current month) → show all; otherwise cut areas after current month
+    const currentIndex = months.findIndex((m) => m.isCurrentMonth);
+
     let cumPred = 0;
     let cumOtros = 0;
     const data = months.map((m, i) => {
-      cumPred += m.predicacionHours;
-      cumOtros += m.otrosHours;
+      const isFuture = currentIndex >= 0 && i > currentIndex;
+      if (!isFuture) {
+        cumPred += m.predicacionHours;
+        cumOtros += m.otrosHours;
+      }
       const ideal = annualGoal > 0 ? ((i + 1) * annualGoal) / 12 : undefined;
-      return { label: m.label, predicacion: cumPred, otros: cumOtros, ideal };
+      return {
+        label: m.label,
+        predicacion: isFuture ? null : cumPred,
+        otros: isFuture ? null : cumOtros,
+        ideal,
+      };
     });
 
     const maxCumulative = cumPred + cumOtros;
@@ -97,6 +108,7 @@ export default function CumulativeAreaChart({
             fillOpacity={0.45}
             dot={false}
             activeDot={{ r: 3, fill: "#000000" }}
+            connectNulls={false}
           />
           <Area
             type="monotone"
@@ -108,6 +120,7 @@ export default function CumulativeAreaChart({
             fillOpacity={0.20}
             dot={false}
             activeDot={{ r: 3, fill: "#474747" }}
+            connectNulls={false}
           />
           {annualGoal > 0 && (
             <Line
