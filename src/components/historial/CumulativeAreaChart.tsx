@@ -17,22 +17,16 @@ import { fmtHours } from "@/lib/utils/calculations";
 interface CumulativeAreaChartProps {
   months: MonthData[];
   annualGoal: number;
-  isCurrentYear: boolean;
 }
 
 export default function CumulativeAreaChart({
   months,
   annualGoal,
-  isCurrentYear,
 }: CumulativeAreaChartProps) {
   const { data, yMax } = useMemo(() => {
-    const currentIndex = months.findIndex((m) => m.isCurrentMonth);
-    const visibleMonths =
-      isCurrentYear && currentIndex >= 0 ? months.slice(0, currentIndex + 1) : months;
-
     let cumPred = 0;
     let cumOtros = 0;
-    const data = visibleMonths.map((m, i) => {
+    const data = months.map((m, i) => {
       cumPred += m.predicacionHours;
       cumOtros += m.otrosHours;
       const ideal = annualGoal > 0 ? ((i + 1) * annualGoal) / 12 : undefined;
@@ -42,7 +36,7 @@ export default function CumulativeAreaChart({
     const maxCumulative = cumPred + cumOtros;
     const yMax = annualGoal > 0 ? Math.max(annualGoal, maxCumulative) * 1.05 : maxCumulative * 1.1;
     return { data, yMax };
-  }, [months, annualGoal, isCurrentYear]);
+  }, [months, annualGoal]);
 
   return (
     <div className="h-44 w-full">

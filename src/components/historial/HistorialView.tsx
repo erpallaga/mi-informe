@@ -87,7 +87,6 @@ export default function HistorialView() {
             <CumulativeAreaChart
               months={months}
               annualGoal={annualGoal}
-              isCurrentYear={isCurrentYear}
             />
           </div>
           <div>
