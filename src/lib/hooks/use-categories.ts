@@ -60,10 +60,14 @@ export function useCategories() {
     };
   }, []);
 
-  const categories = useMemo(() => allCategories.filter((c) => c.is_active), [allCategories]);
+  // `!c.is_system` also tolerates rows read before the is_system migration (undefined).
+  const categories = useMemo(
+    () => allCategories.filter((c) => c.is_active && !c.is_system),
+    [allCategories]
+  );
 
   return {
-    /** Active categories: the ones offered in entry forms. */
+    /** Active, user-created categories: the ones offered in entry forms. */
     categories,
     /** Every category, for name lookups of hours already logged. */
     allCategories,

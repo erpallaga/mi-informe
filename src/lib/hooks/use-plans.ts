@@ -85,7 +85,6 @@ export function usePlans() {
           predicacion_hours: input.predicacion_hours,
           cursos_biblicos: input.cursos_biblicos,
           otros_hours: filteredOtros,
-          updated_at: new Date().toISOString(),
         },
         { onConflict: "user_id,plan_date" }
       )

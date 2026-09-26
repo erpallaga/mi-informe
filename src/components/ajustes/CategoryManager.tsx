@@ -6,9 +6,10 @@ import { useCategories, updateCategoriesCache } from "@/lib/hooks/use-categories
 import type { Category } from "@/lib/types";
 
 export default function CategoryManager() {
-  // All categories, including deactivated ones: otherwise a deactivated
-  // category vanished on the next load and could never be re-activated.
-  const { allCategories: displayed, loading } = useCategories();
+  // User categories including deactivated ones (otherwise a deactivated one
+  // vanished and could never be re-activated). System ones (imports) are hidden.
+  const { allCategories, loading } = useCategories();
+  const displayed = allCategories.filter((c) => !c.is_system);
   const [newName, setNewName] = useState("");
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +36,7 @@ export default function CategoryManager() {
   async function addCategory() {
     const name = newName.trim();
     if (!name || adding) return;
-    if (displayed.some((c) => c.name.toLowerCase() === name.toLowerCase())) {
+    if (allCategories.some((c) => c.name.toLowerCase() === name.toLowerCase())) {
       setError("Ya existe una categoría con ese nombre.");
       return;
     }
@@ -54,8 +55,7 @@ export default function CategoryManager() {
       .insert({
         user_id: user.id,
         name,
-        // Hidden import categories use sort_order 9999; place new ones after the visible ones.
-        sort_order: displayed.filter((c) => c.is_active).reduce((max, c) => Math.max(max, c.sort_order), -1) + 1,
+        sort_order: displayed.reduce((max, c) => Math.max(max, c.sort_order), -1) + 1,
         is_active: true,
       })
       .select()

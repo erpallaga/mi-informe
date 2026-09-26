@@ -60,7 +60,6 @@ export function useActivity() {
         predicacion_hours: input.predicacion_hours,
         cursos_biblicos: input.cursos_biblicos,
         otros_hours: input.otros_hours,
-        updated_at: new Date().toISOString(),
       })
       .eq("id", id);
 
