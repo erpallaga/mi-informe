@@ -6,6 +6,7 @@ App de time tracking para Testigos de Jehová. Registro de predicación, proyect
 - Next.js 14 App Router + TypeScript
 - Tailwind CSS + shadcn/ui
 - Supabase (PostgreSQL + auth email/password)
+- TanStack Query v5 (caché y sincronización de datos en cliente)
 - Vercel (deploy) · Repo: github.com/erpallaga/mi-informe (privado)
 
 ## MCPs activos
@@ -47,7 +48,8 @@ App de time tracking para Testigos de Jehová. Registro de predicación, proyect
 ### Horas: formato y almacenamiento
 - Mostrar siempre en **`hh:mm`** via `fmtHours()` (`src/lib/utils/calculations.ts`). Nunca decimales.
 - Input acepta `h:mm` o número plano via `parseHHMM()`.
-- DB: columnas `NUMERIC(5,2)` — **Supabase puede devolver string en runtime**. Toda fila leída pasa por `normalizeEntry()` / `normalizePlan()` / `normalizeProfile()` (`src/lib/utils/normalize.ts`), nunca `Number()` suelto.
+- Todo valor de horas que se escribe en BD va redondeado al minuto con `roundToMinute()` (6 decimales). Nunca redondear a 2 decimales: 0:10 no es representable y el error se acumula.
+- DB: columnas `NUMERIC(9,6)` — **Supabase puede devolver string en runtime**. Toda fila leída pasa por `normalizeEntry()` / `normalizePlan()` / `normalizeProfile()` (`src/lib/utils/normalize.ts`), nunca `Number()` suelto.
 
 ### Progreso anual (Precursor Regular: objetivo 600h/año, 50h/mes)
 - Hay un **tope de 55h/mes** cuando hay `otros_hours` — ver `monthlyAnnualContribution()`.
@@ -59,9 +61,10 @@ App de time tracking para Testigos de Jehová. Registro de predicación, proyect
 - `otros_hours` es `Record<categoryId, number>` — sumar siempre con `sumOtrosHours()`.
 
 ### Categorías
-- Las creadas automáticamente (por imports) se guardan con `is_active: false`: cuentan en totales pero no aparecen en los formularios de registro.
-- `useCategories()` devuelve `categories` (activas → formularios) y `allCategories` (todas → etiquetar horas ya registradas y Ajustes). Para desgloses usar siempre `allCategories`, o no cuadran con el total.
-- Tras mutar categorías, actualizar la caché compartida con `updateCategoriesCache()`.
+- `is_system = true`: creadas por el sistema (imports, p. ej. Reembolso). Cuentan en totales y desgloses, pero nunca aparecen en formularios ni en Ajustes.
+- `is_active`: solo el interruptor del usuario (Ajustes → Activar/Desactivar).
+- `useCategories()` devuelve `categories` (activas y no de sistema → formularios) y `allCategories` (todas → etiquetar horas ya registradas). Para desgloses usar siempre `allCategories`, o no cuadran con el total.
+- Tras mutar categorías, actualizar la caché con `useUpdateCategoriesCache()`.
 - `Abbuono` de Ministry Assistant → `otros_hours`, nunca `predicacion_hours`.
 
 ---
@@ -72,16 +75,20 @@ App de time tracking para Testigos de Jehová. Registro de predicación, proyect
 `toISOString()` convierte medianoche local a UTC, desplazando 1 día en España (UTC+1/+2). Construir strings directamente:
 Usar los helpers de `src/lib/utils/dates.ts`: `todayISO()`, `toISODate(date)`, `monthBounds(month)`.
 
-### Caché de módulo para hooks de datos estáticos
-`use-categories` y `use-profile` usan caché a nivel de módulo + Set de setters para evitar fetches duplicados. Aplicar el mismo patrón a cualquier hook con datos raramente cambiantes.
-
-Los listeners de invalidación (`mi-informe:entry-created`) van a nivel de módulo, no por instancia: la caché debe invalidarse aunque la pantalla no esté montada, y N instancias no deben lanzar N queries. Descartar respuestas obsoletas con un contador de generación / request id.
+### Datos: TanStack Query
+- Fetchers en `src/lib/query/fetchers.ts` (lanzan en error, normalizan filas); claves en `src/lib/query/keys.ts`.
+- Toda query de `activity_entries` cuelga de `["entries", …]`. Tras cualquier escritura: `invalidateQueries({ queryKey: queryKeys.entries.all })`. No hay bus de eventos propio.
+- Panel (`useProgress`) e Historial (`useHistory`) comparten la query del año de servicio (`useServiceYearEntries`): una sola petición.
+- Datos que solo cambian desde Ajustes (perfil, categorías): `staleTime: Infinity` y actualización explícita de la caché.
+- `loading` = `isPending` (solo sin datos). Los refetch nunca vuelven al skeleton.
 
 ### Sesión
-Login y logout hacen navegación completa (`window.location.replace`), no `router.push`, para vaciar las cachés de módulo entre cuentas.
+Login y logout hacen navegación completa (`window.location.replace`), no `router.push`, para descartar el QueryClient (y sus datos) entre cuentas.
 
-### Refrescos silenciosos
-En hooks con datos volátiles, no poner `loading = true` en refrescos (solo en la primera carga) para evitar desmontar componentes con estado interno.
+### Base de datos
+- Cambios de esquema solo como migración nueva en `supabase/migrations/` (idempotente, en transacción). Ver `supabase/README.md`.
+- Tras cambiar el esquema, actualizar `src/lib/types/database.ts` (`npm run db:types`): los clientes de Supabase están tipados con `Database`.
+
 
 ---
 

@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useCategories, updateCategoriesCache } from "@/lib/hooks/use-categories";
+import { useCategories, useUpdateCategoriesCache } from "@/lib/hooks/use-categories";
 import type { Category } from "@/lib/types";
 
 export default function CategoryManager() {
   // User categories including deactivated ones (otherwise a deactivated one
   // vanished and could never be re-activated). System ones (imports) are hidden.
   const { allCategories, loading } = useCategories();
+  const updateCategoriesCache = useUpdateCategoriesCache();
   const displayed = allCategories.filter((c) => !c.is_system);
   const [newName, setNewName] = useState("");
   const [adding, setAdding] = useState(false);

@@ -1,14 +1,17 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { parseMHBackup, type ParseResult } from "@/lib/utils/mhbackup-parser";
 import { fmtHours } from "@/lib/utils/calculations";
 import { normalizeEntry } from "@/lib/utils/normalize";
+import { queryKeys } from "@/lib/query/keys";
 
 type Stage = "idle" | "preview" | "importing" | "done" | "error";
 
 export default function ImportBackup() {
+  const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [stage, setStage] = useState<Stage>("idle");
   const [result, setResult] = useState<ParseResult | null>(null);
@@ -39,6 +42,12 @@ export default function ImportBackup() {
     setSkipped(0);
     setErrMsg("");
     if (fileRef.current) fileRef.current.value = "";
+  }
+
+  // Entries (all screens) and categories (a Reembolso category may be new).
+  function refreshAfterImport() {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.entries.all });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.categories });
   }
 
   async function doImport() {
@@ -155,7 +164,7 @@ export default function ImportBackup() {
         );
         setStage("error");
         // Earlier chunks were saved: refresh the rest of the app anyway.
-        if (total > 0) window.dispatchEvent(new CustomEvent("mi-informe:entry-created"));
+        if (total > 0) refreshAfterImport();
         return;
       }
 
@@ -163,7 +172,7 @@ export default function ImportBackup() {
       setImported(total);
     }
 
-    if (total > 0) window.dispatchEvent(new CustomEvent("mi-informe:entry-created"));
+    if (total > 0) refreshAfterImport();
     setStage("done");
   }
 
