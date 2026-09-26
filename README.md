@@ -46,6 +46,15 @@ Cubren la lógica de negocio crítica en `src/lib/utils/`:
 - **`calculations`** — `fmtHours`, `parseHHMM`, `sumOtrosHours`, `monthlyAnnualContribution`, `aggregateAnnualCapped` y helpers de objetivo
 - **`dates`** — `getServiceYear` (año de servicio sept–ago), `formatMonthShort`, `getMonthName`
 
+## CI
+
+GitHub Actions (`.github/workflows/ci.yml`) ejecuta en cada PR y push a `master`:
+lint, typecheck, tests (con `TZ=Europe/Madrid`) y build.
+
+## Base de datos
+
+Migraciones en `supabase/migrations/`; cómo aplicarlas en `supabase/README.md`.
+
 ## Build
 
 ```bash
