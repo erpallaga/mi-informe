@@ -15,6 +15,8 @@
  *   - note: free text
  */
 
+import { roundToMinute } from "./calculations";
+
 export interface ParsedEntry {
   entry_date: string;
   predicacion_hours: number;
@@ -40,7 +42,7 @@ function hmmToDecimal(raw: string): number {
   if (isNaN(n)) return 0;
   const hours = Math.trunc(n);
   const minutes = Math.round((n - hours) * 100);
-  return Math.round((hours + minutes / 60) * 100) / 100;
+  return roundToMinute(hours + minutes / 60);
 }
 
 /**
@@ -141,7 +143,7 @@ export function parseMHBackup(buffer: ArrayBuffer): ParseResult {
       if (!isNaN(ore) && ore > 0) {
         entries.push({
           entry_date: tsToDate(ts),
-          predicacion_hours: ore, // these ARE decimal
+          predicacion_hours: roundToMinute(ore), // these ARE decimal
           reembolso_hours: 0,
           cursos_biblicos: 0,
           notes: "Ajuste importado",
@@ -169,8 +171,8 @@ export function parseMHBackup(buffer: ArrayBuffer): ParseResult {
   return {
     entries,
     dateRange,
-    totalPredicacion: Math.round(totalPredicacion * 100) / 100,
-    totalReembolso: Math.round(totalReembolso * 100) / 100,
+    totalPredicacion: roundToMinute(totalPredicacion),
+    totalReembolso: roundToMinute(totalReembolso),
     totalCursos,
   };
 }

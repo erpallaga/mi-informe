@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   fmtHours,
+  roundToMinute,
   parseHHMM,
   monthlyAnnualContribution,
   aggregateAnnualCapped,
@@ -156,7 +157,7 @@ describe('parseHHMM', () => {
 
   // Protects: single-digit minutes are still valid ("1:5" → 1:05)
   it('accepts single-digit minutes', () => {
-    expect(parseHHMM('1:5')).toBe(1.08)
+    expect(parseHHMM('1:5')).toBe(1.083333)
   })
 
   // Protects: round-trip fmtHours → parseHHMM must be lossless
@@ -165,6 +166,35 @@ describe('parseHHMM', () => {
     const formatted = fmtHours(original)
     const parsed = parseHHMM(formatted)
     expect(parsed).toBe(original)
+  })
+})
+
+// ─── roundToMinute ───────────────────────────────────────────────────────────
+
+describe('roundToMinute', () => {
+  // Protects: minute values not representable with 2 decimals (0:10 → 0.17 was +0.2 min)
+  it('keeps 6 decimals for thirds of an hour', () => {
+    expect(roundToMinute(10 / 60)).toBe(0.166667)
+    expect(roundToMinute(70 / 60)).toBe(1.166667)
+  })
+
+  // Protects: legacy 2-decimal DB values map back to their original minute
+  it('snaps legacy 2-decimal values to the original minute', () => {
+    expect(roundToMinute(1.17)).toBe(1.166667)
+    expect(roundToMinute(0.33)).toBe(0.333333)
+  })
+
+  it('returns 0 for non-finite input', () => {
+    expect(roundToMinute(NaN)).toBe(0)
+  })
+
+  // Protects: the accumulated drift — 25 entries of 1:10 must total exactly 29:10
+  it('does not drift when many entries are summed', () => {
+    const one = parseHHMM('1:10')!
+    const total = Array.from({ length: 25 }, () => one).reduce((a, b) => a + b, 0)
+    expect(fmtHours(total)).toBe('29:10')
+    // With the old 2-decimal rounding this was 1.17 × 25 = 29.25 → "29:15"
+    expect(fmtHours(1.17 * 25)).toBe('29:15')
   })
 })
 
