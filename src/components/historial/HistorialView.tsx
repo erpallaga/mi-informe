@@ -87,6 +87,7 @@ export default function HistorialView() {
             <CumulativeAreaChart
               months={months}
               annualGoal={annualGoal}
+              showCapped={profile?.goal_type === "precursor_regular"}
             />
           </div>
           <div>
