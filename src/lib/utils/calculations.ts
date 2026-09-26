@@ -1,26 +1,35 @@
 import type { ActivityEntry, GoalType } from "@/lib/types";
 import { GOAL_PRESETS } from "@/lib/types";
 
-/** Formats decimal hours as "h:mm" (e.g. 1.5 → "1:30", 0.5 → "0:30") */
+/** Formats decimal hours as "h:mm" (e.g. 1.5 → "1:30", 0.5 → "0:30", -0.5 → "-0:30") */
 export function fmtHours(h: number): string {
-  const totalMin = Math.round(h * 60);
+  if (!Number.isFinite(h)) return "0:00";
+  const totalMin = Math.round(Math.abs(h) * 60);
   const hh = Math.floor(totalMin / 60);
   const mm = totalMin % 60;
-  return `${hh}:${String(mm).padStart(2, "0")}`;
+  const sign = h < 0 && totalMin > 0 ? "-" : "";
+  return `${sign}${hh}:${String(mm).padStart(2, "0")}`;
 }
 
-/** Parses "h:mm" or plain number string into decimal hours. Returns null if invalid. */
+/**
+ * Parses "h:mm" or a plain number string into decimal hours. Returns null if invalid.
+ * Accepts a decimal comma ("1,5") as typed on Spanish keyboards. Negative values are rejected.
+ */
 export function parseHHMM(raw: string): number | null {
   const trimmed = raw.trim();
+  if (trimmed === "") return null;
   if (trimmed.includes(":")) {
-    const [hPart, mPart] = trimmed.split(":");
-    const h = parseInt(hPart, 10);
-    const m = parseInt(mPart, 10);
-    if (isNaN(h) || isNaN(m) || m < 0 || m > 59) return null;
+    const match = /^(\d+):(\d{1,2})$/.exec(trimmed);
+    if (!match) return null;
+    const h = parseInt(match[1], 10);
+    const m = parseInt(match[2], 10);
+    if (m > 59) return null;
     return Math.round((h + m / 60) * 100) / 100;
   }
-  const n = parseFloat(trimmed);
-  return isNaN(n) ? null : n;
+  const normalized = trimmed.replace(",", ".");
+  if (!/^\d*\.?\d+$|^\d+\.$/.test(normalized)) return null;
+  const n = Number(normalized);
+  return Number.isFinite(n) ? n : null;
 }
 
 /**

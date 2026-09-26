@@ -47,7 +47,7 @@ App de time tracking para Testigos de Jehová. Registro de predicación, proyect
 ### Horas: formato y almacenamiento
 - Mostrar siempre en **`hh:mm`** via `fmtHours()` (`src/lib/utils/calculations.ts`). Nunca decimales.
 - Input acepta `h:mm` o número plano via `parseHHMM()`.
-- DB: columnas `NUMERIC(5,2)` — **Supabase devuelve string en runtime**. Coercionar siempre con `Number()` al leer datos de Supabase.
+- DB: columnas `NUMERIC(5,2)` — **Supabase puede devolver string en runtime**. Toda fila leída pasa por `normalizeEntry()` / `normalizePlan()` / `normalizeProfile()` (`src/lib/utils/normalize.ts`), nunca `Number()` suelto.
 
 ### Progreso anual (Precursor Regular: objetivo 600h/año, 50h/mes)
 - Hay un **tope de 55h/mes** cuando hay `otros_hours` — ver `monthlyAnnualContribution()`.
@@ -59,7 +59,9 @@ App de time tracking para Testigos de Jehová. Registro de predicación, proyect
 - `otros_hours` es `Record<categoryId, number>` — sumar siempre con `sumOtrosHours()`.
 
 ### Categorías
-- Las creadas automáticamente (por imports) se guardan con `is_active: false`: cuentan en totales pero no aparecen en la UI.
+- Las creadas automáticamente (por imports) se guardan con `is_active: false`: cuentan en totales pero no aparecen en los formularios de registro.
+- `useCategories()` devuelve `categories` (activas → formularios) y `allCategories` (todas → etiquetar horas ya registradas y Ajustes). Para desgloses usar siempre `allCategories`, o no cuadran con el total.
+- Tras mutar categorías, actualizar la caché compartida con `updateCategoriesCache()`.
 - `Abbuono` de Ministry Assistant → `otros_hours`, nunca `predicacion_hours`.
 
 ---
@@ -68,13 +70,15 @@ App de time tracking para Testigos de Jehová. Registro de predicación, proyect
 
 ### Fechas ISO: nunca usar toISOString()
 `toISOString()` convierte medianoche local a UTC, desplazando 1 día en España (UTC+1/+2). Construir strings directamente:
-```ts
-from: `${y}-${pad(m + 1)}-01`
-to:   `${y}-${pad(m + 1)}-${pad(lastDay)}`
-```
+Usar los helpers de `src/lib/utils/dates.ts`: `todayISO()`, `toISODate(date)`, `monthBounds(month)`.
 
 ### Caché de módulo para hooks de datos estáticos
 `use-categories` y `use-profile` usan caché a nivel de módulo + Set de setters para evitar fetches duplicados. Aplicar el mismo patrón a cualquier hook con datos raramente cambiantes.
+
+Los listeners de invalidación (`mi-informe:entry-created`) van a nivel de módulo, no por instancia: la caché debe invalidarse aunque la pantalla no esté montada, y N instancias no deben lanzar N queries. Descartar respuestas obsoletas con un contador de generación / request id.
+
+### Sesión
+Login y logout hacen navegación completa (`window.location.replace`), no `router.push`, para vaciar las cachés de módulo entre cuentas.
 
 ### Refrescos silenciosos
 En hooks con datos volátiles, no poner `loading = true` en refrescos (solo en la primera carga) para evitar desmontar componentes con estado interno.

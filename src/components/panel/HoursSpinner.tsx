@@ -22,14 +22,20 @@ export default function HoursSpinner({
   const [draft, setDraft] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Round to whole minutes (stored with 2 decimals like parseHHMM). Rounding to
+  // 0.1h turned 1:10 − 0:30 into 0:42 instead of 0:40.
+  function stepBy(delta: number) {
+    const minutes = Math.round((value + delta) * 60);
+    const next = Math.round((minutes / 60) * 100) / 100;
+    onChange(Math.min(max, Math.max(min, next)));
+  }
+
   function decrement() {
-    const next = Math.max(min, Math.round((value - step) * 10) / 10);
-    onChange(next);
+    stepBy(-step);
   }
 
   function increment() {
-    const next = Math.min(max, Math.round((value + step) * 10) / 10);
-    onChange(next);
+    stepBy(step);
   }
 
   function startEdit() {
@@ -70,12 +76,14 @@ export default function HoursSpinner({
           className="w-14 text-center text-base font-semibold tabular-nums text-on-surface bg-surface-container-low outline-none py-1"
         />
       ) : (
-        <span
+        <button
+          type="button"
           onClick={startEdit}
+          aria-label={`Editar horas (${fmtHours(value)})`}
           className="w-14 text-center text-base font-semibold tabular-nums text-on-surface cursor-text select-none"
         >
           {fmtHours(value)}
-        </span>
+        </button>
       )}
 
       <button

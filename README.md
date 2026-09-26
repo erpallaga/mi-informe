@@ -6,7 +6,7 @@ App de seguimiento de actividad de predicación para Testigos de Jehová. Regist
 
 - **Next.js 14** App Router + TypeScript
 - **Tailwind CSS** (design system propio, 0px border-radius, glassmorphism)
-- **Supabase** — auth (Magic Link) + PostgreSQL
+- **Supabase** — auth (email + contraseña) + PostgreSQL
 - **Vercel** — deploy
 
 ## Funcionalidades

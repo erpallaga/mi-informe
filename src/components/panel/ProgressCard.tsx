@@ -39,6 +39,9 @@ export default function ProgressCard({
   // Detect the moment the goal is crossed
   useEffect(() => {
     const prev = prevCurrentRef.current;
+    // Update before the early return: otherwise prev stayed below the goal and
+    // every later refresh (e.g. another entry) replayed the celebration.
+    prevCurrentRef.current = current;
     if (prev !== null && prev < goal && current >= goal && !noGoal && goal > 0) {
       setShowOverlay(true);
       setOverlayFading(false);
@@ -49,7 +52,6 @@ export default function ProgressCard({
         clearTimeout(hideTimer);
       };
     }
-    prevCurrentRef.current = current;
   }, [current, goal, noGoal]);
 
   return (

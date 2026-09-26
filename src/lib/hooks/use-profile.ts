@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/types";
+import { normalizeProfile } from "@/lib/utils/normalize";
 
 type ProfileSetter = (p: Profile | null) => void;
 const listeners = new Set<ProfileSetter>();
@@ -15,10 +16,12 @@ function doFetch(): Promise<void> {
   if (fetchPromise) return fetchPromise;
   fetchPromise = Promise.resolve(
     createClient().from("profiles").select("*").single()
-  ).then(({ data }) => {
-    cachedProfile = data ?? null;
+  ).then(({ data, error }) => {
     fetchPromise = null;
-    listeners.forEach((fn) => fn(cachedProfile!));
+    // On a network error leave the cache unset so the next mount retries.
+    const profile = data ? normalizeProfile(data) : null;
+    if (!error) cachedProfile = profile;
+    listeners.forEach((fn) => fn(profile));
   });
   return fetchPromise;
 }

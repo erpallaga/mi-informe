@@ -58,6 +58,7 @@ export default function NewEntrySheet({
             defaultOtrosOpen={true}
             onSuccess={handleSuccess}
             editEntry={editEntry}
+            open={open}
           />
         </div>
       </div>

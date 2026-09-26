@@ -2,18 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { monthBounds } from "@/lib/utils/dates";
+import { normalizeEntry } from "@/lib/utils/normalize";
 import type { ActivityEntry } from "@/lib/types";
-
-function monthBounds(month: Date): { from: string; to: string } {
-  const y = month.getFullYear();
-  const m = month.getMonth(); // 0-indexed
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const lastDay = new Date(y, m + 1, 0).getDate();
-  return {
-    from: `${y}-${pad(m + 1)}-01`,
-    to: `${y}-${pad(m + 1)}-${pad(lastDay)}`,
-  };
-}
 
 export function useEventos() {
   const [month, setMonth] = useState(() => {
@@ -23,9 +14,12 @@ export function useEventos() {
   const [entries, setEntries] = useState<ActivityEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Id of the latest request: responses for a month the user already left are dropped.
+  const requestIdRef = useRef(0);
 
   const fetchEntries = useCallback(
     async (isInitial: boolean) => {
+      const requestId = ++requestIdRef.current;
       if (isInitial) setLoading(true);
       setError(null);
 
@@ -40,14 +34,11 @@ export function useEventos() {
         .order("entry_date", { ascending: false })
         .order("created_at", { ascending: false });
 
+      if (requestId !== requestIdRef.current) return;
       if (fetchError) {
         setError(fetchError.message);
       } else {
-        const normalized = (data ?? []).map((e) => ({
-          ...e,
-          predicacion_hours: Number(e.predicacion_hours),
-        }));
-        setEntries(normalized);
+        setEntries((data ?? []).map(normalizeEntry));
       }
 
       setLoading(false);

@@ -66,6 +66,17 @@ describe('fmtHours', () => {
     expect(fmtHours(Number('3.50'))).toBe('3:30')
   })
 
+  // Protects: negative differences (e.g. remaining vs. goal) must not render as "-1:-30"
+  it('formats negative hours with a single leading sign', () => {
+    expect(fmtHours(-1.5)).toBe('-1:30')
+    expect(fmtHours(-0.001)).toBe('0:00')
+  })
+
+  // Protects: NaN from a bad coercion must not reach the UI as "NaN:NaN"
+  it('renders non-finite values as 0:00', () => {
+    expect(fmtHours(NaN)).toBe('0:00')
+  })
+
   // Protects: quarterly total with minutes (e.g. 87.75h = 87h 45min)
   it('converts fractional hours with non-round minutes', () => {
     expect(fmtHours(87.75)).toBe('87:45')
@@ -123,6 +134,29 @@ describe('parseHHMM', () => {
   // Protects: "0:30" — half-hour session like cart witnessing
   it('parses 0:30 as 0.5 hours', () => {
     expect(parseHHMM('0:30')).toBe(0.5)
+  })
+
+  // Protects: Spanish keyboards type a decimal comma — "1,5" used to parse as 1
+  it('accepts a decimal comma', () => {
+    expect(parseHHMM('1,5')).toBe(1.5)
+  })
+
+  // Protects: "-1:30" used to become -0.5 (h=-1 plus +0.5)
+  it('rejects negative values in both formats', () => {
+    expect(parseHHMM('-1:30')).toBeNull()
+    expect(parseHHMM('-2')).toBeNull()
+  })
+
+  // Protects: parseFloat leniency — "2abc" or "1:30:00" must not be half-accepted
+  it('rejects trailing garbage and extra segments', () => {
+    expect(parseHHMM('2abc')).toBeNull()
+    expect(parseHHMM('1:30:00')).toBeNull()
+    expect(parseHHMM('1:')).toBeNull()
+  })
+
+  // Protects: single-digit minutes are still valid ("1:5" → 1:05)
+  it('accepts single-digit minutes', () => {
+    expect(parseHHMM('1:5')).toBe(1.08)
   })
 
   // Protects: round-trip fmtHours → parseHHMM must be lossless

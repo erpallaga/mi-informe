@@ -1,11 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import LogoIcon from "@/components/ui/LogoIcon";
 
 type Mode = "login" | "signup";
+
+// Supabase auth errors come in English; translate the ones users actually hit.
+function translateAuthError(message: string): string {
+  const m = message.toLowerCase();
+  if (m.includes("invalid login credentials")) return "Correo o contraseña incorrectos.";
+  if (m.includes("email not confirmed")) return "Confirma tu correo antes de iniciar sesión.";
+  if (m.includes("already registered")) return "Ya existe una cuenta con este correo.";
+  if (m.includes("password should be at least")) return "La contraseña es demasiado corta.";
+  if (m.includes("rate limit") || m.includes("too many")) return "Demasiados intentos. Espera unos minutos.";
+  return message;
+}
 
 export default function LoginPage() {
   const [mode, setMode] = useState<Mode>("login");
@@ -14,7 +24,13 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [signedUp, setSignedUp] = useState(false);
-  const router = useRouter();
+
+  // /auth/callback redirects here with ?error=auth when the email link fails.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("error") === "auth") {
+      setError("El enlace de confirmación no es válido o ha caducado. Inicia sesión o regístrate de nuevo.");
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,14 +42,20 @@ export default function LoginPage() {
     if (mode === "login") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        setError(error.message);
+        setError(translateAuthError(error.message));
       } else {
-        router.push("/panel");
+        // Full page load so no client cache from a previous session survives.
+        window.location.replace("/panel");
+        return;
       }
     } else {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      });
       if (error) {
-        setError(error.message);
+        setError(translateAuthError(error.message));
       } else {
         setSignedUp(true);
       }

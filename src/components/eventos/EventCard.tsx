@@ -26,19 +26,20 @@ export default function EventCard({ entry, categories, onEdit, onDelete }: Event
 
   const catMap = Object.fromEntries(categories.map((c) => [c.id, c.name]));
 
-  const rows: { label: string; value: string }[] = [];
+  const rows: { key: string; label: string; value: string }[] = [];
   if (entry.predicacion_hours > 0) {
-    rows.push({ label: "Predicación", value: fmtHours(entry.predicacion_hours) });
+    rows.push({ key: "predicacion", label: "Predicación", value: fmtHours(entry.predicacion_hours) });
   }
   if (entry.cursos_biblicos > 0) {
     rows.push({
+      key: "cursos",
       label: "Cursos Bíblicos",
       value: String(entry.cursos_biblicos),
     });
   }
   for (const [catId, hours] of Object.entries(entry.otros_hours)) {
     if (hours > 0) {
-      rows.push({ label: catMap[catId] ?? catId, value: fmtHours(hours) });
+      rows.push({ key: catId, label: catMap[catId] ?? "Otros trabajos", value: fmtHours(hours) });
     }
   }
 
@@ -78,7 +79,7 @@ export default function EventCard({ entry, categories, onEdit, onDelete }: Event
         ) : (
           rows.map((row) => (
             <div
-              key={row.label}
+              key={row.key}
               className="flex items-center justify-between px-4 py-2.5 bg-surface-container-lowest"
             >
               <p className="text-sm text-on-surface">{row.label}</p>

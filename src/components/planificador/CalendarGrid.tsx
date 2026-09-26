@@ -1,14 +1,10 @@
 "use client";
 
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from "date-fns";
-import { formatMonthYear } from "@/lib/utils/dates";
+import { formatMonthYear, todayISO } from "@/lib/utils/dates";
 import { fmtHours } from "@/lib/utils/calculations";
 
 const WEEKDAYS = ["LU", "MA", "MI", "JU", "VI", "SA", "DO"];
-
-function todayISO(): string {
-  return new Date().toISOString().split("T")[0];
-}
 
 function mondayIndex(date: Date): number {
   const d = getDay(date);

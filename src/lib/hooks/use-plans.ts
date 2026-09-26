@@ -1,19 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { monthBounds } from "@/lib/utils/dates";
+import { normalizePlan } from "@/lib/utils/normalize";
 import type { DailyPlan } from "@/lib/types";
-
-function monthBounds(month: Date): { from: string; to: string } {
-  const y = month.getFullYear();
-  const m = month.getMonth(); // 0-indexed
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const lastDay = new Date(y, m + 1, 0).getDate();
-  return {
-    from: `${y}-${pad(m + 1)}-01`,
-    to: `${y}-${pad(m + 1)}-${pad(lastDay)}`,
-  };
-}
 
 export type PlanInput = Pick<
   DailyPlan,
@@ -29,9 +20,12 @@ export function usePlans() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Id of the latest request: responses for a month the user already left are dropped.
+  const requestIdRef = useRef(0);
 
   const fetchPlans = useCallback(
     async (isInitial: boolean) => {
+      const requestId = ++requestIdRef.current;
       if (isInitial) setLoading(true);
       setError(null);
 
@@ -44,15 +38,14 @@ export function usePlans() {
         .gte("plan_date", from)
         .lte("plan_date", to);
 
+      if (requestId !== requestIdRef.current) return;
       if (fetchError) {
         setError(fetchError.message);
       } else {
         const byDate: Record<string, DailyPlan> = {};
-        for (const plan of data ?? []) {
-          byDate[plan.plan_date] = {
-            ...plan,
-            predicacion_hours: Number(plan.predicacion_hours),
-          };
+        for (const row of data ?? []) {
+          const plan = normalizePlan(row);
+          byDate[plan.plan_date] = plan;
         }
         setPlans(byDate);
       }
@@ -107,7 +100,7 @@ export function usePlans() {
 
     setPlans((prev) => ({
       ...prev,
-      [planDate]: { ...data, predicacion_hours: Number(data.predicacion_hours) },
+      [planDate]: normalizePlan(data),
     }));
     setSaving(false);
     return true;

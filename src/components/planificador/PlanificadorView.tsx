@@ -4,13 +4,10 @@ import { useState } from "react";
 import { usePlans } from "@/lib/hooks/use-plans";
 import type { PlanInput } from "@/lib/hooks/use-plans";
 import { useEventos } from "@/lib/hooks/use-eventos";
-import { fmtHours } from "@/lib/utils/calculations";
+import { fmtHours, sumOtrosHours } from "@/lib/utils/calculations";
+import { todayISO, toISODate } from "@/lib/utils/dates";
 import CalendarGrid from "./CalendarGrid";
 import DayPlanForm from "./DayPlanForm";
-
-function todayISO(): string {
-  return new Date().toISOString().split("T")[0];
-}
 
 export default function PlanificadorView() {
   const { month, plans, loading, saving, upsertPlan, deletePlan, prevMonth, nextMonth } = usePlans();
@@ -20,15 +17,14 @@ export default function PlanificadorView() {
   // Horas planificadas por día
   const plansByDate: Record<string, number> = {};
   for (const [date, plan] of Object.entries(plans)) {
-    const otros = Object.values(plan.otros_hours).reduce((a, b) => a + b, 0);
-    plansByDate[date] = plan.predicacion_hours + otros;
+    plansByDate[date] = plan.predicacion_hours + sumOtrosHours(plan.otros_hours);
   }
 
   // Horas realizadas por día (suma de todas las entradas del día)
   const actualByDate: Record<string, number> = {};
   for (const e of entries) {
-    const otros = Object.values(e.otros_hours).reduce((a, b) => a + b, 0);
-    actualByDate[e.entry_date] = (actualByDate[e.entry_date] ?? 0) + e.predicacion_hours + otros;
+    actualByDate[e.entry_date] =
+      (actualByDate[e.entry_date] ?? 0) + e.predicacion_hours + sumOtrosHours(e.otros_hours);
   }
 
   const totalPlanned = Object.values(plansByDate).reduce((a, b) => a + b, 0);
@@ -46,8 +42,18 @@ export default function PlanificadorView() {
     );
   }
 
-  function handlePrev() { prevMonth(); eventoPrev(); }
-  function handleNext() { nextMonth(); eventoNext(); }
+  // Keep the selected day inside the visible month: otherwise the form would
+  // edit a day that is no longer on screen (and whose plan isn't loaded).
+  function selectDayInMonth(offset: number) {
+    const target = new Date(month.getFullYear(), month.getMonth() + offset, 1);
+    const today = new Date();
+    const isCurrentMonth =
+      today.getFullYear() === target.getFullYear() && today.getMonth() === target.getMonth();
+    setSelectedDate(isCurrentMonth ? todayISO() : toISODate(target));
+  }
+
+  function handlePrev() { selectDayInMonth(-1); prevMonth(); eventoPrev(); }
+  function handleNext() { selectDayInMonth(1); nextMonth(); eventoNext(); }
 
   async function handleSave(input: PlanInput) {
     return await upsertPlan(selectedDate, input);

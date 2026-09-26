@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { parseMHBackup, type ParseResult } from "@/lib/utils/mhbackup-parser";
 import { fmtHours } from "@/lib/utils/calculations";
+import { normalizeEntry } from "@/lib/utils/normalize";
 
 type Stage = "idle" | "preview" | "importing" | "done" | "error";
 
@@ -12,6 +13,7 @@ export default function ImportBackup() {
   const [stage, setStage] = useState<Stage>("idle");
   const [result, setResult] = useState<ParseResult | null>(null);
   const [imported, setImported] = useState(0);
+  const [skipped, setSkipped] = useState(0);
   const [errMsg, setErrMsg] = useState("");
 
   async function handleFile(file: File) {
@@ -34,6 +36,7 @@ export default function ImportBackup() {
     setStage("idle");
     setResult(null);
     setImported(0);
+    setSkipped(0);
     setErrMsg("");
     if (fileRef.current) fileRef.current.value = "";
   }
@@ -82,12 +85,45 @@ export default function ImportBackup() {
       }
     }
 
+    // Skip entries already in the DB (re-importing the same backup, or retrying
+    // after a partial failure, used to duplicate everything). Multiset match:
+    // several identical entries on the same day are legitimate, so each existing
+    // row only cancels one parsed entry.
+    let toImport = result.entries;
+    if (result.dateRange) {
+      const { data: existingRows, error: existingError } = await supabase
+        .from("activity_entries")
+        .select("entry_date, predicacion_hours, cursos_biblicos, otros_hours")
+        .gte("entry_date", result.dateRange.from)
+        .lte("entry_date", result.dateRange.to);
+      if (existingError) {
+        setErrMsg(`No se pudieron comprobar los registros existentes: ${existingError.message}`);
+        setStage("error");
+        return;
+      }
+      const counts = new Map<string, number>();
+      for (const row of existingRows ?? []) {
+        const e = normalizeEntry(row);
+        const reem = reembolsoId ? e.otros_hours[reembolsoId] ?? 0 : 0;
+        const key = importKey(e.entry_date, e.predicacion_hours, e.cursos_biblicos, reem);
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+      }
+      toImport = result.entries.filter((e) => {
+        const key = importKey(e.entry_date, e.predicacion_hours, e.cursos_biblicos, e.reembolso_hours);
+        const n = counts.get(key) ?? 0;
+        if (n === 0) return true;
+        counts.set(key, n - 1);
+        return false;
+      });
+    }
+    setSkipped(result.entries.length - toImport.length);
+
     // Batch insert in chunks of 50
     const CHUNK = 50;
     let total = 0;
 
-    for (let i = 0; i < result.entries.length; i += CHUNK) {
-      const chunk = result.entries.slice(i, i + CHUNK);
+    for (let i = 0; i < toImport.length; i += CHUNK) {
+      const chunk = toImport.slice(i, i + CHUNK);
 
       const rows = chunk.map((e) => {
         const otros_hours: Record<string, number> = {};
@@ -107,8 +143,13 @@ export default function ImportBackup() {
       const { error } = await supabase.from("activity_entries").insert(rows);
 
       if (error) {
-        setErrMsg(`Error en lote ${Math.floor(i / CHUNK) + 1}: ${error.message}`);
+        setErrMsg(
+          `Error en lote ${Math.floor(i / CHUNK) + 1}: ${error.message}. ` +
+            `Se importaron ${total} registros; al reintentar se omitirán.`
+        );
         setStage("error");
+        // Earlier chunks were saved: refresh the rest of the app anyway.
+        if (total > 0) window.dispatchEvent(new CustomEvent("mi-informe:entry-created"));
         return;
       }
 
@@ -116,7 +157,7 @@ export default function ImportBackup() {
       setImported(total);
     }
 
-    window.dispatchEvent(new CustomEvent("mi-informe:entry-created"));
+    if (total > 0) window.dispatchEvent(new CustomEvent("mi-informe:entry-created"));
     setStage("done");
   }
 
@@ -200,7 +241,7 @@ export default function ImportBackup() {
       {stage === "importing" && (
         <div className="bg-surface-container-low p-4">
           <p className="text-sm text-on-surface">
-            Importando... {imported} / {result?.entries.length ?? 0}
+            Importando... {imported} / {(result?.entries.length ?? 0) - skipped}
           </p>
         </div>
       )}
@@ -211,6 +252,11 @@ export default function ImportBackup() {
             <p className="text-sm text-on-surface">
               {imported} registros importados correctamente.
             </p>
+            {skipped > 0 && (
+              <p className="text-xs text-on-surface-variant mt-1">
+                {skipped} ya existían y se han omitido.
+              </p>
+            )}
           </div>
           <button
             type="button"
@@ -242,6 +288,12 @@ function Row({ label, value }: { label: string; value: string }) {
       <span className="text-sm font-medium text-on-surface">{value}</span>
     </div>
   );
+}
+
+// Rounded to minutes so 2-decimal DB values match the parser's output.
+function importKey(date: string, pred: number, cursos: number, reembolso: number): string {
+  const min = (h: number) => Math.round(h * 60);
+  return `${date}|${min(pred)}|${cursos}|${min(reembolso)}`;
 }
 
 const MONTHS_SHORT = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];

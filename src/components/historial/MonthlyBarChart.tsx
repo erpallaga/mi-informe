@@ -27,13 +27,13 @@ export default function MonthlyBarChart({ months }: MonthlyBarChartProps) {
         >
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 9, fill: "#777777", fontFamily: "Inter" }}
+            tick={{ fontSize: 9, fill: "#777777" }}
             axisLine={false}
             tickLine={false}
             interval={0}
           />
           <YAxis
-            tick={{ fontSize: 10, fill: "#777777", fontFamily: "Inter" }}
+            tick={{ fontSize: 10, fill: "#777777" }}
             axisLine={false}
             tickLine={false}
             allowDecimals={false}
@@ -45,7 +45,6 @@ export default function MonthlyBarChart({ months }: MonthlyBarChartProps) {
               border: "none",
               borderRadius: 0,
               fontSize: 12,
-              fontFamily: "Inter",
               boxShadow: "0 4px 40px rgba(26,28,29,0.04)",
             }}
             formatter={(value, name) => [

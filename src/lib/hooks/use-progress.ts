@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { aggregateEntries, aggregateAnnualCapped } from "@/lib/utils/calculations";
 import { getServiceYear } from "@/lib/utils/dates";
-import type { ActivityEntry } from "@/lib/types";
+import { normalizeEntry } from "@/lib/utils/normalize";
 
 interface ProgressData {
   predicacionHours: number;
@@ -28,6 +28,10 @@ type Setter = (data: CachedProgress) => void;
 let cachedData: CachedProgress | null = null;
 let cachedMonthKey: string | null = null; // "YYYY-MM" — used to detect month rollover
 let fetchPromise: Promise<void> | null = null;
+// Incremented on every invalidation: a response from an older generation is
+// discarded so a slow stale fetch can never overwrite fresher data.
+let generation = 0;
+let listenersAttached = false;
 const setters = new Set<Setter>();
 
 function getCurrentMonthKey(): string {
@@ -43,20 +47,33 @@ function notifyAll(data: CachedProgress) {
 
 function fetchAndCache(): Promise<void> {
   if (fetchPromise) return fetchPromise;
-  fetchPromise = (async () => {
+  const gen = generation;
+  const promise = (async () => {
     const supabase = createClient();
     const now = new Date();
     const serviceYear = getServiceYear(now);
     const monthKey = getCurrentMonthKey();
 
     // Single query for the full service year — month is filtered client-side.
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("activity_entries")
       .select("*")
       .gte("entry_date", serviceYear.start)
       .lte("entry_date", serviceYear.end);
 
-    const allEntries = (data ?? []) as ActivityEntry[];
+    if (gen !== generation) {
+      // Superseded by a newer invalidation: wait for that one instead.
+      await fetchPromise;
+      return;
+    }
+    fetchPromise = null;
+    if (error) {
+      // Keep whatever was shown before; release the waiting hooks.
+      if (cachedData) notifyAll(cachedData);
+      return;
+    }
+
+    const allEntries = (data ?? []).map(normalizeEntry);
     const monthEntries = allEntries.filter((e) =>
       e.entry_date.startsWith(monthKey)
     );
@@ -69,17 +86,42 @@ function fetchAndCache(): Promise<void> {
 
     cachedData = result;
     cachedMonthKey = monthKey;
-    fetchPromise = null;
     notifyAll(result);
   })();
-  return fetchPromise;
+  fetchPromise = promise;
+  return promise;
 }
 
 function invalidateAndRefresh() {
-  cachedData = null;
-  cachedMonthKey = null;
+  generation++;
   fetchPromise = null;
+  // cachedData is kept so mounted cards stay on screen during the silent refresh.
+  cachedMonthKey = null;
   fetchAndCache();
+}
+
+// One global listener set, however many components use the hook — otherwise
+// N mounted instances would fire N identical queries per entry change.
+function attachGlobalListeners() {
+  if (listenersAttached || typeof window === "undefined") return;
+  listenersAttached = true;
+  window.addEventListener("mi-informe:entry-created", () => {
+    if (setters.size > 0) invalidateAndRefresh();
+    else {
+      // Nobody is showing progress: just drop the cache, next mount refetches.
+      generation++;
+      fetchPromise = null;
+      cachedData = null;
+      cachedMonthKey = null;
+    }
+  });
+  // PWA resumed after hours/days in background: pick up the new month and
+  // entries logged from other devices.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && setters.size > 0) {
+      invalidateAndRefresh();
+    }
+  });
 }
 
 export function useProgress() {
@@ -91,6 +133,7 @@ export function useProgress() {
 
   useEffect(() => {
     let mounted = true;
+    attachGlobalListeners();
     setters.add(setData);
 
     const currentMonthKey = getCurrentMonthKey();
@@ -111,15 +154,9 @@ export function useProgress() {
       });
     }
 
-    function onEntryCreated() {
-      invalidateAndRefresh();
-    }
-
-    window.addEventListener("mi-informe:entry-created", onEntryCreated);
     return () => {
       mounted = false;
       setters.delete(setData);
-      window.removeEventListener("mi-informe:entry-created", onEntryCreated);
     };
   }, []);
 

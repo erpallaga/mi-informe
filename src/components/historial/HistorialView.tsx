@@ -20,8 +20,8 @@ export default function HistorialView() {
   const label = `${startYear}-${startYear + 1}`;
   const isCurrentYear = startYear === currentSY.startYear;
 
-  const { months, loading: loadingMonths } = useHistory(startYear);
-  const { categories, loading: loadingCats } = useCategories();
+  const { months, entries, loading: loadingMonths } = useHistory(startYear);
+  const { allCategories: categories, loading: loadingCats } = useCategories();
   const { profile, loading: loadingProfile } = useProfile();
 
   if (loadingMonths || loadingCats || loadingProfile) {
@@ -93,7 +93,7 @@ export default function HistorialView() {
             <p className="text-xs font-medium uppercase tracking-widest text-on-surface-variant mb-3">
               Actividad por día de la semana
             </p>
-            <WeekdayHeatmap startYear={startYear} />
+            <WeekdayHeatmap startYear={startYear} entries={entries} />
           </div>
         </div>
       )}

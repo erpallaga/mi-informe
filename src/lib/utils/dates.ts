@@ -22,6 +22,28 @@ export function getServiceYear(now?: Date): {
   };
 }
 
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/** Local calendar date as "YYYY-MM-DD". Never use toISOString() for this: it converts to UTC. */
+export function toISODate(d: Date): string {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+export function todayISO(): string {
+  return toISODate(new Date());
+}
+
+/** First and last day ("YYYY-MM-DD") of the calendar month containing `month`. */
+export function monthBounds(month: Date): { from: string; to: string } {
+  const y = month.getFullYear();
+  const m = month.getMonth();
+  const lastDay = new Date(y, m + 1, 0).getDate();
+  return {
+    from: `${y}-${pad(m + 1)}-01`,
+    to: `${y}-${pad(m + 1)}-${pad(lastDay)}`,
+  };
+}
+
 export function formatDateLong(date: Date): string {
   return format(date, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
 }

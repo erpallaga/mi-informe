@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { useHeatmapData } from "@/lib/hooks/use-heatmap";
-import { sumOtrosHours } from "@/lib/utils/calculations";
+import { fmtHours, sumOtrosHours } from "@/lib/utils/calculations";
 import { formatMonthShort } from "@/lib/utils/dates";
+import type { ActivityEntry } from "@/lib/types";
 
 // Service year months in order: Sep(8)…Dec(11), Jan(0)…Aug(7)
 const SERVICE_YEAR_MONTHS = [8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7];
@@ -16,15 +16,10 @@ function mondayIndex(d: Date): number {
 
 interface WeekdayHeatmapProps {
   startYear: number;
+  entries: ActivityEntry[];
 }
 
-export default function WeekdayHeatmap({ startYear }: WeekdayHeatmapProps) {
-  const { entries, loading } = useHeatmapData(startYear);
-
-  if (loading) {
-    return <div className="bg-surface-container-low h-44 animate-pulse" />;
-  }
-
+export default function WeekdayHeatmap({ startYear, entries }: WeekdayHeatmapProps) {
   // Build grid: key `${calYear}-${month}-${weekdayIndex}` → total hours
   const grid: Record<string, number> = {};
   for (const e of entries) {
@@ -77,7 +72,7 @@ export default function WeekdayHeatmap({ startYear }: WeekdayHeatmapProps) {
                     key={key}
                     className="h-4 w-full"
                     style={cellStyle(val)}
-                    title={val > 0 ? `${formatMonthShort(month)} ${WEEKDAYS[dow]}: ${val.toFixed(1)}h` : undefined}
+                    title={val > 0 ? `${formatMonthShort(month)} ${WEEKDAYS[dow]}: ${fmtHours(val)}` : undefined}
                   />
                 );
               })}

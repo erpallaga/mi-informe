@@ -11,8 +11,8 @@ import type { ActivityEntry } from "@/lib/types";
 
 export default function EventosView() {
   const { month, entries, loading, prevMonth, nextMonth } = useEventos();
-  const { categories, loading: loadingCats } = useCategories();
-  const { deleteEntry } = useActivity();
+  const { allCategories, loading: loadingCats } = useCategories();
+  const { deleteEntry, error: deleteError } = useActivity();
 
   const [editEntry, setEditEntry] = useState<ActivityEntry | null>(null);
 
@@ -52,6 +52,8 @@ export default function EventosView() {
           </button>
         </div>
 
+        {deleteError && <p className="text-xs text-error">{deleteError}</p>}
+
         {/* Lista de entradas */}
         {entries.length === 0 ? (
           <div className="bg-surface-container-low px-6 py-10 text-center">
@@ -66,7 +68,7 @@ export default function EventosView() {
               <EventCard
                 key={entry.id}
                 entry={entry}
-                categories={categories}
+                categories={allCategories}
                 onEdit={(e) => setEditEntry(e)}
                 onDelete={handleDelete}
               />

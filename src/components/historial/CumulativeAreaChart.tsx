@@ -55,13 +55,13 @@ export default function CumulativeAreaChart({
         <ComposedChart data={data} margin={{ top: 4, right: 0, left: -28, bottom: 0 }}>
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 9, fill: "#777777", fontFamily: "Inter" }}
+            tick={{ fontSize: 9, fill: "#777777" }}
             axisLine={false}
             tickLine={false}
             interval={0}
           />
           <YAxis
-            tick={{ fontSize: 10, fill: "#777777", fontFamily: "Inter" }}
+            tick={{ fontSize: 10, fill: "#777777" }}
             axisLine={false}
             tickLine={false}
             allowDecimals={false}
@@ -74,7 +74,6 @@ export default function CumulativeAreaChart({
               border: "none",
               borderRadius: 0,
               fontSize: 12,
-              fontFamily: "Inter",
               boxShadow: "0 4px 40px rgba(26,28,29,0.04)",
             }}
             formatter={(value, name) => {
@@ -95,8 +94,7 @@ export default function CumulativeAreaChart({
                 position: "insideTopRight",
                 fontSize: 9,
                 fill: "#777777",
-                fontFamily: "Inter",
-              }}
+                }}
             />
           )}
           <Area
