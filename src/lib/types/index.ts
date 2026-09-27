@@ -26,7 +26,10 @@ export interface Category {
   user_id: string;
   name: string;
   sort_order: number;
+  /** User toggle: shown in entry forms when true. */
   is_active: boolean;
+  /** Created by the system (imports): never listed in forms or Ajustes, but counted in totals. */
+  is_system: boolean;
   created_at: string;
 }
 

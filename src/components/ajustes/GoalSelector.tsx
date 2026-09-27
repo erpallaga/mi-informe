@@ -25,6 +25,7 @@ export default function GoalSelector() {
   const [goalType, setGoalType] = useState<GoalType | null>(null);
   const [auxiliarHours, setAuxiliarHours] = useState<15 | 30 | null>(null);
   const [customHours, setCustomHours] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
 
   const currentGoal: GoalType = goalType ?? profile?.goal_type ?? "publicador";
 
@@ -36,20 +37,25 @@ export default function GoalSelector() {
   const currentCustom =
     customHours !== "" ? customHours : String(profile?.custom_goal_hours ?? "");
 
+  const customValue = Number(currentCustom.replace(",", "."));
+  const customValid = currentCustom !== "" && Number.isFinite(customValue) && customValue > 0 && customValue <= 300;
+
   async function save(
     newType: GoalType,
     newCustomHours: number | null
   ): Promise<void> {
     if (!profile) return;
     setSaving(true);
+    setError(null);
     const supabase = createClient();
-    await supabase
+    const { error: updateError } = await supabase
       .from("profiles")
       .update({
         goal_type: newType,
         custom_goal_hours: newCustomHours,
       })
       .eq("id", profile.id);
+    if (updateError) setError("No se pudo guardar el objetivo.");
     await refreshProfile();
     setSaving(false);
   }
@@ -61,8 +67,12 @@ export default function GoalSelector() {
       await save("publicador", null);
     } else if (type === "precursor_regular") {
       await save("precursor_regular", null);
+    } else if (type === "precursor_auxiliar") {
+      // Save right away with the current sub-choice (30h by default) so that
+      // leaving the screen doesn't silently discard the selection.
+      await save("precursor_auxiliar", currentAuxiliarHours);
     }
-    // precursor_auxiliar and custom need a sub-choice before saving
+    // custom needs an hours value before saving
   }
 
   async function handleSelectAuxiliar(hours: 15 | 30) {
@@ -146,10 +156,8 @@ export default function GoalSelector() {
           />
           <button
             type="button"
-            disabled={saving || !currentCustom}
-            onClick={() =>
-              save("custom", currentCustom ? parseFloat(currentCustom) : null)
-            }
+            disabled={saving || !customValid}
+            onClick={() => save("custom", customValue)}
             className="bg-primary px-5 py-3 text-xs font-semibold uppercase tracking-widest text-on-primary disabled:opacity-40"
           >
             {saving ? "..." : "Guardar"}
@@ -157,6 +165,7 @@ export default function GoalSelector() {
         </div>
       )}
 
+      {error && <p className="text-xs text-error">{error}</p>}
     </div>
   );
 }

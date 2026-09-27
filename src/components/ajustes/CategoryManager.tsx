@@ -2,51 +2,72 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useCategories } from "@/lib/hooks/use-categories";
+import { useCategories, useUpdateCategoriesCache } from "@/lib/hooks/use-categories";
 import type { Category } from "@/lib/types";
 
 export default function CategoryManager() {
-  const { categories, loading } = useCategories();
-  const [localCats, setLocalCats] = useState<Category[] | null>(null);
+  // User categories including deactivated ones (otherwise a deactivated one
+  // vanished and could never be re-activated). System ones (imports) are hidden.
+  const { allCategories, loading } = useCategories();
+  const updateCategoriesCache = useUpdateCategoriesCache();
+  const displayed = allCategories.filter((c) => !c.is_system);
   const [newName, setNewName] = useState("");
   const [adding, setAdding] = useState(false);
-
-  const displayed = localCats ?? categories;
+  const [error, setError] = useState<string | null>(null);
 
   async function toggleActive(cat: Category) {
-    const supabase = createClient();
-    const updated = displayed.map((c) =>
-      c.id === cat.id ? { ...c, is_active: !c.is_active } : c
+    setError(null);
+    const next = !cat.is_active;
+    // Optimistic update of the shared cache: entry forms see it immediately.
+    updateCategoriesCache((cats) =>
+      cats.map((c) => (c.id === cat.id ? { ...c, is_active: next } : c))
     );
-    setLocalCats(updated);
-    await supabase
+    const { error: updateError } = await createClient()
       .from("categories")
-      .update({ is_active: !cat.is_active })
+      .update({ is_active: next })
       .eq("id", cat.id);
+    if (updateError) {
+      updateCategoriesCache((cats) =>
+        cats.map((c) => (c.id === cat.id ? { ...c, is_active: cat.is_active } : c))
+      );
+      setError("No se pudo guardar el cambio.");
+    }
   }
 
   async function addCategory() {
-    if (!newName.trim()) return;
+    const name = newName.trim();
+    if (!name || adding) return;
+    if (allCategories.some((c) => c.name.toLowerCase() === name.toLowerCase())) {
+      setError("Ya existe una categoría con ese nombre.");
+      return;
+    }
     setAdding(true);
+    setError(null);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      setError("No hay sesión activa.");
+      setAdding(false);
+      return;
+    }
 
-    const { data } = await supabase
+    const { data, error: insertError } = await supabase
       .from("categories")
       .insert({
         user_id: user.id,
-        name: newName.trim(),
-        sort_order: displayed.length,
+        name,
+        sort_order: displayed.reduce((max, c) => Math.max(max, c.sort_order), -1) + 1,
         is_active: true,
       })
       .select()
       .single();
 
-    if (data) {
-      setLocalCats([...displayed, data as Category]);
+    if (insertError || !data) {
+      setError("No se pudo crear la categoría.");
+    } else {
+      updateCategoriesCache((cats) => [...cats, data as Category]);
+      setNewName("");
     }
-    setNewName("");
     setAdding(false);
   }
 
@@ -84,13 +105,20 @@ export default function CategoryManager() {
         ))}
       </div>
 
+      {error && <p className="text-xs text-error">{error}</p>}
+
       {/* Add new */}
       <div className="flex gap-3 items-center">
         <input
           type="text"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addCategory()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addCategory();
+            }
+          }}
           placeholder="Nueva categoría"
           className="flex-1 bg-surface-container-low px-4 py-3 text-sm text-on-surface outline-none focus:bg-white transition-colors ease-out"
         />

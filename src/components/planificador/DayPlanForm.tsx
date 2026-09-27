@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import HoursSpinner from "@/components/panel/HoursSpinner";
+import { sumOtrosHours } from "@/lib/utils/calculations";
 import type { DailyPlan } from "@/lib/types";
 import type { PlanInput } from "@/lib/hooks/use-plans";
 
@@ -21,15 +22,13 @@ export default function DayPlanForm({
   onDelete,
 }: DayPlanFormProps) {
   const [predicacionHours, setPredicacionHours] = useState(plan?.predicacion_hours ?? 0);
-  const [otrosHours, setOtrosHours] = useState(
-    Object.values(plan?.otros_hours ?? {}).reduce((a, b) => a + b, 0)
-  );
+  const [otrosHours, setOtrosHours] = useState(sumOtrosHours(plan?.otros_hours ?? {}));
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   // Sincroniza el formulario al cambiar de día
   useEffect(() => {
     setPredicacionHours(plan?.predicacion_hours ?? 0);
-    setOtrosHours(Object.values(plan?.otros_hours ?? {}).reduce((a, b) => a + b, 0));
+    setOtrosHours(sumOtrosHours(plan?.otros_hours ?? {}));
     setConfirmDelete(false);
   }, [plan, date]);
 
@@ -41,18 +40,32 @@ export default function DayPlanForm({
 
   const onSaveRef = useRef(onSave);
   useEffect(() => { onSaveRef.current = onSave; }, [onSave]);
+  const onDeleteRef = useRef(onDelete);
+  useEffect(() => { onDeleteRef.current = onDelete; }, [onDelete]);
+  // Plan the form was loaded from. Updated after the auto-save cleanup below
+  // has run, so that cleanup still sees the plan of the day being left.
+  const planRef = useRef(plan);
+  useEffect(() => { planRef.current = plan; }, [plan, date]);
 
   // Auto-save al cambiar de día o al salir de pantalla
   useEffect(() => {
     return () => {
       const { predicacionHours: pred, otrosHours: otros } = valuesRef.current;
-      if (pred > 0 || otros > 0) {
-        onSaveRef.current({
-          predicacion_hours: pred,
-          cursos_biblicos: 0,
-          otros_hours: otros > 0 ? { total: otros } : {},
-        });
+      const original = planRef.current;
+      const origPred = original?.predicacion_hours ?? 0;
+      const origOtros = sumOtrosHours(original?.otros_hours ?? {});
+      // Unchanged: skip the write (browsing days used to re-upsert every plan).
+      if (pred === origPred && otros === origOtros) return;
+      if (pred === 0 && otros === 0) {
+        // Brought back to 0:00 — remove the plan instead of silently keeping it.
+        if (original) onDeleteRef.current();
+        return;
       }
+      onSaveRef.current({
+        predicacion_hours: pred,
+        cursos_biblicos: 0,
+        otros_hours: otros > 0 ? { total: otros } : {},
+      });
     };
   }, [date]);
 

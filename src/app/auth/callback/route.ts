@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import type { Database } from "@/lib/types/database";
 import { cookies } from "next/headers";
 
 export async function GET(request: Request) {
@@ -8,7 +9,7 @@ export async function GET(request: Request) {
 
   if (code) {
     const cookieStore = await cookies();
-    const supabase = createServerClient(
+    const supabase = createServerClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {

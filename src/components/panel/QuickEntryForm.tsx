@@ -1,27 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import HoursSpinner from "./HoursSpinner";
 import CountSpinner from "./CountSpinner";
 import { useCategories } from "@/lib/hooks/use-categories";
 import { useActivity } from "@/lib/hooks/use-activity";
+import { todayISO } from "@/lib/utils/dates";
 import type { ActivityEntry } from "@/lib/types";
-
-function todayISO(): string {
-  const d = new Date();
-  return d.toISOString().split("T")[0];
-}
 
 interface QuickEntryFormProps {
   onSuccess?: () => void;
   defaultOtrosOpen?: boolean;
   editEntry?: ActivityEntry;
+  /** Whether the containing sheet is visible (the form stays mounted while hidden). */
+  open?: boolean;
 }
 
 export default function QuickEntryForm({
   onSuccess,
   defaultOtrosOpen = false,
   editEntry,
+  open,
 }: QuickEntryFormProps) {
   const isEdit = !!editEntry;
 
@@ -35,6 +34,19 @@ export default function QuickEntryForm({
 
   const { categories, loading: loadingCats } = useCategories();
   const { insertEntry, updateEntry, loading: submitting, error } = useActivity();
+
+  const isEmpty =
+    predicacionHours === 0 &&
+    cursosBiblicos === 0 &&
+    Object.values(otrosHours).every((v) => v === 0);
+
+  // The FAB sheet stays mounted for the whole session (the PWA can live for
+  // days): when it opens with an untouched form, move the date to today.
+  useEffect(() => {
+    if (open && !isEdit && isEmpty) setDate(todayISO());
+    // Only on open transitions; isEmpty is read at that moment on purpose.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   function setOtroHours(id: string, value: number) {
     setOtrosHours((prev) => ({ ...prev, [id]: value }));
@@ -71,11 +83,6 @@ export default function QuickEntryForm({
       onSuccess?.();
     }
   }
-
-  const isEmpty =
-    predicacionHours === 0 &&
-    cursosBiblicos === 0 &&
-    Object.values(otrosHours).every((v) => v === 0);
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">

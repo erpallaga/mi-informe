@@ -10,7 +10,7 @@ import { getMonthName, getServiceYear } from "@/lib/utils/dates";
 export default function ProgressSection() {
   const { monthly, annual, annualCappedHours, loading: loadingProgress } = useProgress();
   const { profile, loading: loadingProfile } = useProfile();
-  const { categories, loading: loadingCats } = useCategories();
+  const { allCategories: categories, loading: loadingCats } = useCategories();
 
   if (loadingProgress || loadingProfile || loadingCats) {
     return (
@@ -34,17 +34,14 @@ export default function ProgressSection() {
   const calMonth = now.getMonth();
   const monthsElapsed = calMonth >= 8 ? calMonth - 7 : calMonth + 5;
 
-  // Build category name map
-  const catNames: Record<string, string> = {};
-  for (const cat of categories) catNames[cat.id] = cat.name;
-
   // Monthly details (always visible)
   const monthlyDetails = [
     { label: "Predicación", value: fmtHours(monthly?.predicacionHours ?? 0) },
     { label: "Cursos bíblicos", value: `${monthly?.cursosBiblicos ?? 0}` },
   ];
 
-  // Monthly Otros (collapsible)
+  // Monthly Otros (collapsible). All categories, including hidden ones
+  // (e.g. imported Reembolso), so the breakdown adds up to the total.
   const monthlyOtros = categories
     .filter((cat) => (monthly?.otrosByCategory?.[cat.id] ?? 0) > 0)
     .map((cat) => ({ label: cat.name, value: fmtHours(monthly!.otrosByCategory[cat.id]) }));

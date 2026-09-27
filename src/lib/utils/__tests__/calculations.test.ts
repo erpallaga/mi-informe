@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   fmtHours,
+  roundToMinute,
   parseHHMM,
   monthlyAnnualContribution,
   aggregateAnnualCapped,
@@ -66,6 +67,17 @@ describe('fmtHours', () => {
     expect(fmtHours(Number('3.50'))).toBe('3:30')
   })
 
+  // Protects: negative differences (e.g. remaining vs. goal) must not render as "-1:-30"
+  it('formats negative hours with a single leading sign', () => {
+    expect(fmtHours(-1.5)).toBe('-1:30')
+    expect(fmtHours(-0.001)).toBe('0:00')
+  })
+
+  // Protects: NaN from a bad coercion must not reach the UI as "NaN:NaN"
+  it('renders non-finite values as 0:00', () => {
+    expect(fmtHours(NaN)).toBe('0:00')
+  })
+
   // Protects: quarterly total with minutes (e.g. 87.75h = 87h 45min)
   it('converts fractional hours with non-round minutes', () => {
     expect(fmtHours(87.75)).toBe('87:45')
@@ -125,12 +137,64 @@ describe('parseHHMM', () => {
     expect(parseHHMM('0:30')).toBe(0.5)
   })
 
+  // Protects: Spanish keyboards type a decimal comma — "1,5" used to parse as 1
+  it('accepts a decimal comma', () => {
+    expect(parseHHMM('1,5')).toBe(1.5)
+  })
+
+  // Protects: "-1:30" used to become -0.5 (h=-1 plus +0.5)
+  it('rejects negative values in both formats', () => {
+    expect(parseHHMM('-1:30')).toBeNull()
+    expect(parseHHMM('-2')).toBeNull()
+  })
+
+  // Protects: parseFloat leniency — "2abc" or "1:30:00" must not be half-accepted
+  it('rejects trailing garbage and extra segments', () => {
+    expect(parseHHMM('2abc')).toBeNull()
+    expect(parseHHMM('1:30:00')).toBeNull()
+    expect(parseHHMM('1:')).toBeNull()
+  })
+
+  // Protects: single-digit minutes are still valid ("1:5" → 1:05)
+  it('accepts single-digit minutes', () => {
+    expect(parseHHMM('1:5')).toBe(1.083333)
+  })
+
   // Protects: round-trip fmtHours → parseHHMM must be lossless
   it('round-trips through fmtHours without precision loss', () => {
     const original = 3.5
     const formatted = fmtHours(original)
     const parsed = parseHHMM(formatted)
     expect(parsed).toBe(original)
+  })
+})
+
+// ─── roundToMinute ───────────────────────────────────────────────────────────
+
+describe('roundToMinute', () => {
+  // Protects: minute values not representable with 2 decimals (0:10 → 0.17 was +0.2 min)
+  it('keeps 6 decimals for thirds of an hour', () => {
+    expect(roundToMinute(10 / 60)).toBe(0.166667)
+    expect(roundToMinute(70 / 60)).toBe(1.166667)
+  })
+
+  // Protects: legacy 2-decimal DB values map back to their original minute
+  it('snaps legacy 2-decimal values to the original minute', () => {
+    expect(roundToMinute(1.17)).toBe(1.166667)
+    expect(roundToMinute(0.33)).toBe(0.333333)
+  })
+
+  it('returns 0 for non-finite input', () => {
+    expect(roundToMinute(NaN)).toBe(0)
+  })
+
+  // Protects: the accumulated drift — 25 entries of 1:10 must total exactly 29:10
+  it('does not drift when many entries are summed', () => {
+    const one = parseHHMM('1:10')!
+    const total = Array.from({ length: 25 }, () => one).reduce((a, b) => a + b, 0)
+    expect(fmtHours(total)).toBe('29:10')
+    // With the old 2-decimal rounding this was 1.17 × 25 = 29.25 → "29:15"
+    expect(fmtHours(1.17 * 25)).toBe('29:15')
   })
 })
 

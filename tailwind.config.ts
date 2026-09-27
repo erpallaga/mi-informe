@@ -20,7 +20,9 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
+        // next/font exposes a hashed family name through --font-inter; the literal
+        // "Inter" only matched devices with Inter installed locally.
+        sans: ["var(--font-inter)", "Inter", "sans-serif"],
       },
       colors: {
         surface: {

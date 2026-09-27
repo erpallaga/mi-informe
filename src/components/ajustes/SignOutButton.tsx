@@ -1,15 +1,14 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignOutButton() {
-  const router = useRouter();
-
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/login");
+    // Full page load (not router.push): drops the module-level caches of
+    // profile/categories/progress/history so the next account never sees them.
+    window.location.replace("/login");
   }
 
   return (

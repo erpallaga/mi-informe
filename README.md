@@ -6,7 +6,7 @@ App de seguimiento de actividad de predicación para Testigos de Jehová. Regist
 
 - **Next.js 14** App Router + TypeScript
 - **Tailwind CSS** (design system propio, 0px border-radius, glassmorphism)
-- **Supabase** — auth (Magic Link) + PostgreSQL
+- **Supabase** — auth (email + contraseña) + PostgreSQL
 - **Vercel** — deploy
 
 ## Funcionalidades
@@ -45,6 +45,15 @@ Cubren la lógica de negocio crítica en `src/lib/utils/`:
 
 - **`calculations`** — `fmtHours`, `parseHHMM`, `sumOtrosHours`, `monthlyAnnualContribution`, `aggregateAnnualCapped` y helpers de objetivo
 - **`dates`** — `getServiceYear` (año de servicio sept–ago), `formatMonthShort`, `getMonthName`
+
+## CI
+
+GitHub Actions (`.github/workflows/ci.yml`) ejecuta en cada PR y push a `master`:
+lint, typecheck, tests (con `TZ=Europe/Madrid`) y build.
+
+## Base de datos
+
+Migraciones en `supabase/migrations/`; cómo aplicarlas en `supabase/README.md`.
 
 ## Build
 

@@ -8,7 +8,7 @@
   }
 
   body {
-    font-family: "Inter", sans-serif;
+    font-family: var(--font-inter), "Inter", sans-serif;
     background-color: #f9f9fb;
     color: #1a1c1d;
     -webkit-font-smoothing: antialiased;

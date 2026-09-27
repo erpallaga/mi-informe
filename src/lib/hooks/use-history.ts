@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { aggregateEntries } from "@/lib/utils/calculations";
 import { formatMonthShort, getServiceYear } from "@/lib/utils/dates";
+import { fetchEntriesBetween } from "@/lib/query/fetchers";
+import { queryKeys } from "@/lib/query/keys";
 import type { ActivityEntry } from "@/lib/types";
 
 export interface MonthData {
@@ -22,23 +24,25 @@ export interface MonthData {
 // The 12 months of the service year in order: Sept(8)...Dec(11), Jan(0)...Aug(7)
 const SERVICE_YEAR_MONTHS = [8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7];
 
-// Module-level cache keyed by service startYear.
-const cache = new Map<number, MonthData[]>();
-const fetchPromises = new Map<number, Promise<void>>();
+const EMPTY: ActivityEntry[] = [];
 
-function buildMonthData(entries: ActivityEntry[], startYear: number): MonthData[] {
+export function buildMonthData(entries: ActivityEntry[], startYear: number, now = new Date()): MonthData[] {
   const endYear = startYear + 1;
-  const now = new Date();
   const currentCalMonth = now.getMonth();
   const currentCalYear = now.getFullYear();
 
+  const byMonthKey = new Map<string, ActivityEntry[]>();
+  for (const e of entries) {
+    const key = e.entry_date.substring(0, 7); // "YYYY-MM"
+    const list = byMonthKey.get(key);
+    if (list) list.push(e);
+    else byMonthKey.set(key, [e]);
+  }
+
   return SERVICE_YEAR_MONTHS.map((calMonth) => {
     const calYear = calMonth >= 8 ? startYear : endYear;
-    const monthEntries = entries.filter((e) => {
-      const d = new Date(e.entry_date + "T00:00:00");
-      return d.getMonth() === calMonth && d.getFullYear() === calYear;
-    });
-    const agg = aggregateEntries(monthEntries);
+    const key = `${calYear}-${String(calMonth + 1).padStart(2, "0")}`;
+    const agg = aggregateEntries(byMonthKey.get(key) ?? []);
     return {
       month: calMonth,
       calYear,
@@ -49,64 +53,22 @@ function buildMonthData(entries: ActivityEntry[], startYear: number): MonthData[
   });
 }
 
-function fetchForYear(startYear: number): Promise<void> {
-  if (fetchPromises.has(startYear)) return fetchPromises.get(startYear)!;
-  const endYear = startYear + 1;
-  const promise = Promise.resolve(
-    createClient()
-      .from("activity_entries")
-      .select("*")
-      .gte("entry_date", `${startYear}-09-01`)
-      .lte("entry_date", `${endYear}-08-31`)
-  ).then(({ data }) => {
-    const entries = (data ?? []) as ActivityEntry[];
-    cache.set(startYear, buildMonthData(entries, startYear));
-    fetchPromises.delete(startYear);
+/**
+ * All entries of one service year (Sept → Aug). Shared by Panel (useProgress)
+ * and Historial (useHistory): same key, one request.
+ */
+export function useServiceYearEntries(startYear: number) {
+  return useQuery({
+    queryKey: queryKeys.entries.serviceYear(startYear),
+    queryFn: () => fetchEntriesBetween(`${startYear}-09-01`, `${startYear + 1}-08-31`),
   });
-  fetchPromises.set(startYear, promise);
-  return promise;
 }
 
 export function useHistory(serviceStartYear?: number) {
-  const sv = getServiceYear();
-  const startYear = serviceStartYear ?? sv.startYear;
+  const startYear = serviceStartYear ?? getServiceYear().startYear;
+  const { data, isPending } = useServiceYearEntries(startYear);
+  const entries = data ?? EMPTY;
+  const months = useMemo(() => buildMonthData(entries, startYear), [entries, startYear]);
 
-  const [months, setMonths] = useState<MonthData[]>(cache.get(startYear) ?? []);
-  const [loading, setLoading] = useState(!cache.has(startYear));
-
-  useEffect(() => {
-    let mounted = true;
-
-    if (cache.has(startYear)) {
-      setMonths(cache.get(startYear)!);
-      setLoading(false);
-    } else {
-      setLoading(true);
-      fetchForYear(startYear).then(() => {
-        if (mounted) {
-          setMonths(cache.get(startYear)!);
-          setLoading(false);
-        }
-      });
-    }
-
-    function onEntryCreated() {
-      // Only invalidate the current service year — past years don't change.
-      const currentSY = getServiceYear().startYear;
-      if (startYear === currentSY) {
-        cache.delete(startYear);
-        fetchForYear(startYear).then(() => {
-          if (mounted) setMonths(cache.get(startYear)!);
-        });
-      }
-    }
-
-    window.addEventListener("mi-informe:entry-created", onEntryCreated);
-    return () => {
-      mounted = false;
-      window.removeEventListener("mi-informe:entry-created", onEntryCreated);
-    };
-  }, [startYear]);
-
-  return { months, loading };
+  return { months, entries, loading: isPending };
 }

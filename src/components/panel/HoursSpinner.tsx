@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { fmtHours, parseHHMM } from "@/lib/utils/calculations";
+import { fmtHours, parseHHMM, roundToMinute } from "@/lib/utils/calculations";
 
 interface HoursSpinnerProps {
   value: number;
@@ -22,14 +22,17 @@ export default function HoursSpinner({
   const [draft, setDraft] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Round to whole minutes. Rounding to 0.1h turned 1:10 − 0:30 into 0:42.
+  function stepBy(delta: number) {
+    onChange(Math.min(max, Math.max(min, roundToMinute(value + delta))));
+  }
+
   function decrement() {
-    const next = Math.max(min, Math.round((value - step) * 10) / 10);
-    onChange(next);
+    stepBy(-step);
   }
 
   function increment() {
-    const next = Math.min(max, Math.round((value + step) * 10) / 10);
-    onChange(next);
+    stepBy(step);
   }
 
   function startEdit() {
@@ -70,12 +73,14 @@ export default function HoursSpinner({
           className="w-14 text-center text-base font-semibold tabular-nums text-on-surface bg-surface-container-low outline-none py-1"
         />
       ) : (
-        <span
+        <button
+          type="button"
           onClick={startEdit}
+          aria-label={`Editar horas (${fmtHours(value)})`}
           className="w-14 text-center text-base font-semibold tabular-nums text-on-surface cursor-text select-none"
         >
           {fmtHours(value)}
-        </span>
+        </button>
       )}
 
       <button

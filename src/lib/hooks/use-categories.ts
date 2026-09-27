@@ -1,39 +1,47 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useCallback, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchCategories } from "@/lib/query/fetchers";
+import { queryKeys } from "@/lib/query/keys";
 import type { Category } from "@/lib/types";
 
-// Module-level cache shared across all hook instances
-let cachedCategories: Category[] | null = null;
-let fetchPromise: PromiseLike<void> | null = null;
-type Setter = (cats: Category[]) => void;
-const setters = new Set<Setter>();
+const EMPTY: Category[] = [];
 
-function fetchCategories() {
-  if (fetchPromise) return fetchPromise;
-  fetchPromise = createClient()
-    .from("categories")
-    .select("*")
-    .eq("is_active", true)
-    .order("sort_order")
-    .then(({ data }) => {
-      cachedCategories = data ?? [];
-      setters.forEach((s) => s(cachedCategories!));
-    });
-  return fetchPromise;
+/**
+ * ALL categories (active + inactive + system): inactive/system ones are hidden
+ * from entry forms but still needed to label hours already logged under them.
+ */
+export function useCategories() {
+  const { data, isPending } = useQuery({
+    queryKey: queryKeys.categories,
+    queryFn: fetchCategories,
+    // Only changes through Ajustes, which updates the cache itself.
+    staleTime: Infinity,
+  });
+  const allCategories = data ?? EMPTY;
+
+  // `!c.is_system` also tolerates rows read before the is_system migration (undefined).
+  const categories = useMemo(
+    () => allCategories.filter((c) => c.is_active && !c.is_system),
+    [allCategories]
+  );
+
+  return {
+    /** Active, user-created categories: the ones offered in entry forms. */
+    categories,
+    /** Every category, for name lookups of hours already logged. */
+    allCategories,
+    loading: isPending,
+  };
 }
 
-export function useCategories() {
-  const [categories, setCategories] = useState<Category[]>(cachedCategories ?? []);
-  const [loading, setLoading] = useState(cachedCategories === null);
-
-  useEffect(() => {
-    if (cachedCategories !== null) return;
-    setters.add(setCategories);
-    fetchCategories().then(() => setLoading(false));
-    return () => { setters.delete(setCategories); };
-  }, []);
-
-  return { categories, loading };
+/** Applies a local change (after a mutation) to the shared categories cache. */
+export function useUpdateCategoriesCache() {
+  const queryClient = useQueryClient();
+  return useCallback(
+    (updater: (cats: Category[]) => Category[]) =>
+      queryClient.setQueryData<Category[]>(queryKeys.categories, (cats) => updater(cats ?? [])),
+    [queryClient]
+  );
 }
